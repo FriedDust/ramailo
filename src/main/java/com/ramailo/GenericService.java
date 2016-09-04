@@ -3,12 +3,14 @@ package com.ramailo;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ejb.Stateless;
+
 /**
  * 
  * @author Kailash Bijayananda <fried.dust@gmail.com>
  *
  */
-//@Stateless
+@Stateless
 public class GenericService {
 
 	//@Inject

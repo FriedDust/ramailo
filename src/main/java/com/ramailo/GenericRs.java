@@ -22,29 +22,34 @@ public class GenericRs {
 	@Context
 	private UriInfo uriInfo;
 
-//	@Inject
+	// @Inject
 	private PathParser pathParser = new PathParser();
 
-//	@Inject
+	// @Inject
 	private Processor processor = new Processor();
-	
-//	@Inject
-	private GenericService genericService = new GenericService();
-	
+
+	@Inject
+	private GenericService genericService;
+
 	@GET
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAction() {
 		Class<?> clazz = findResource();
 		List<?> result = genericService.findAll(clazz);
-	
+
 		return Response.ok().entity(result).build();
 	}
-	
+
 	private Class<?> findResource() {
-		ResourceMeta resource = pathParser.parse(uriInfo);
-		Class<?> clazz = processor.process(resource);
-		
-		return clazz;
+		// ResourceMeta resource = pathParser.parse(uriInfo);
+		// Class<?> clazz = processor.process(resource);
+		//
+		// return clazz;
+		try {
+			return Class.forName("com.frieddust.ramailodemo.entity.Customer");
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException();
+		}
 	}
 }
