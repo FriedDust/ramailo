@@ -86,14 +86,9 @@ public class GenericRs {
 	}
 
 	private Class<?> findResource() {
-		// ResourceMeta resource = pathParser.parse(uriInfo);
-		// Class<?> clazz = processor.process(resource);
-		//
-		// return clazz;
-		try {
-			return Class.forName("com.frieddust.ramailodemo.entity.Customer");
-		} catch (ClassNotFoundException e) {
-			throw new RuntimeException();
-		}
+		 ResourceMeta resource = pathParser.parse(uriInfo);
+		 Class<?> clazz = processor.process(resource);
+		
+		 return clazz;
 	}
 }

@@ -1,10 +1,11 @@
 package com.ramailo;
 
-import java.util.Set;
+import java.util.List;
 
-import org.reflections.Reflections;
+import javax.inject.Inject;
 
 import com.ramailo.exception.ResourceNotFoundException;
+import com.ramailo.util.ClassFinder;
 
 /**
  * 
@@ -13,17 +14,20 @@ import com.ramailo.exception.ResourceNotFoundException;
  */
 public class Processor {
 
+	@Inject
+	private ClassFinder classFinder;
+
 	public Class<?> process(ResourceMeta resourceMeta) {
 		Class<?> clazz = findResourceEntity(resourceMeta.getEntity());
 		return clazz;
 	}
 
 	public Class<?> findResourceEntity(String resourceName) {
-		Reflections reflections = new Reflections("");
-		Set<Class<?>> resources = reflections.getTypesAnnotatedWith(RamailoResource.class);
+		List<Class<?>> classes = classFinder.findHavingAnnotation(RamailoResource.class);
+		for (Class<?> cls : classes) {
+			RamailoResource annotation = cls.getAnnotation(RamailoResource.class);
 
-		for (Class<?> cls : resources) {
-			if (cls.getSimpleName().equals(resourceName)) {
+			if (annotation.value().equals(resourceName)) {
 				return cls;
 			}
 		}
