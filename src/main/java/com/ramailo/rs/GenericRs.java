@@ -81,8 +81,7 @@ public class GenericRs {
 	@DELETE
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response deleteAction(JsonObject object) {
+	public Response deleteAction() {
 		ResourceMeta resource = pathParser.parse(uriInfo);
 		genericService.remove(resource);
 
