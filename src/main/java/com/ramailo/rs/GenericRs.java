@@ -1,4 +1,4 @@
-package com.ramailo;
+package com.ramailo.rs;
 
 import java.util.List;
 
@@ -15,6 +15,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
+import com.ramailo.PathParser;
+import com.ramailo.ResourceMeta;
+import com.ramailo.service.GenericService;
 
 /**
  * 
@@ -69,7 +73,7 @@ public class GenericRs {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response putAction(JsonObject object) {
 		ResourceMeta resource = pathParser.parse(uriInfo);
-		Object result = genericService.update(resource, resource.getId(), object);
+		Object result = genericService.update(resource, object);
 
 		return Response.ok().entity(result).build();
 	}
@@ -80,7 +84,7 @@ public class GenericRs {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteAction(JsonObject object) {
 		ResourceMeta resource = pathParser.parse(uriInfo);
-		genericService.remove(resource, resource.getId());
+		genericService.remove(resource);
 
 		return Response.ok().build();
 	}

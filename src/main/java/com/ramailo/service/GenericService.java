@@ -1,4 +1,4 @@
-package com.ramailo;
+package com.ramailo.service;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -12,7 +12,9 @@ import javax.persistence.EntityManager;
 import org.apache.commons.beanutils.BeanUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ramailo.ResourceMeta;
 import com.ramailo.exception.ResourceNotFoundException;
+import com.ramailo.util.PkUtility;
 
 /**
  * 
@@ -33,7 +35,7 @@ public class GenericService {
 	}
 
 	public Object findById(ResourceMeta resource) {
-		Integer id = Integer.valueOf(resource.getId());
+		Object id = PkUtility.castToPkType(resource);
 		Object result = em.find(resource.getEntityClass(), id);
 
 		return result;
@@ -52,10 +54,10 @@ public class GenericService {
 		}
 	}
 
-	public Object update(ResourceMeta resource, Object pk, JsonObject object) {
+	public Object update(ResourceMeta resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
-		Integer id = Integer.valueOf(pk.toString());
 		try {
+			Object id = PkUtility.castToPkType(resource);
 			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
 			Object existing = em.find(resource.getEntityClass(), id);
 			if (existing == null)
@@ -74,8 +76,8 @@ public class GenericService {
 		}
 	}
 
-	public void remove(ResourceMeta resource, Object pk) {
-		Integer id = Integer.valueOf(pk.toString());
+	public void remove(ResourceMeta resource) {
+		Object id = PkUtility.castToPkType(resource);
 		Object existing = em.find(resource.getEntityClass(), id);
 		if (existing == null)
 			throw new ResourceNotFoundException();
