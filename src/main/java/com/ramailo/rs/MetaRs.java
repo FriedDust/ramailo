@@ -1,8 +1,8 @@
 package com.ramailo.rs;
 
+import java.util.List;
+
 import javax.inject.Inject;
-import javax.websocket.server.PathParam;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -15,6 +15,7 @@ import com.ramailo.PathParser;
 import com.ramailo.ResourceMeta;
 import com.ramailo.meta.Resource;
 import com.ramailo.service.MetaService;
+import com.ramailo.service.ResourceService;
 
 /**
  * 
@@ -27,9 +28,20 @@ public class MetaRs {
 	@Inject
 	private PathParser pathParser;
 
+	@Inject
+	private ResourceService resourceService;
+
 	@Context
 	private UriInfo uriInfo;
-	
+
+	@GET
+	@Path("/")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response indexAction() {
+		List<Resource> resources = resourceService.findResources();
+		return Response.ok().entity(resources).build();
+	}
+
 	@GET
 	@Path("/{resource}")
 	@Produces(MediaType.APPLICATION_JSON)

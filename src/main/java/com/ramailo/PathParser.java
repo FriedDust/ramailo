@@ -6,8 +6,7 @@ import javax.inject.Inject;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
-import com.ramailo.exception.ResourceNotFoundException;
-import com.ramailo.util.ClassFinder;
+import com.ramailo.service.ResourceService;
 
 /**
  * 
@@ -17,7 +16,7 @@ import com.ramailo.util.ClassFinder;
 public class PathParser {
 
 	@Inject
-	private ClassFinder classFinder;
+	private ResourceService resourceService;
 
 	public ResourceMeta parse(UriInfo uriInfo) {
 		List<PathSegment> segments = uriInfo.getPathSegments();
@@ -26,7 +25,7 @@ public class PathParser {
 		if (segments.size() > 0) {
 			resourceMeta.setResource(segments.get(0).toString());
 
-			Class<?> entityClass = findResourceEntity(resourceMeta.getResource());
+			Class<?> entityClass = resourceService.findResourceEntity(resourceMeta.getResource());
 			resourceMeta.setEntityClass(entityClass);
 		}
 
@@ -40,22 +39,11 @@ public class PathParser {
 	public ResourceMeta parseMeta(String resourceName) {
 		ResourceMeta resourceMeta = new ResourceMeta();
 		resourceMeta.setResource(resourceName);
-		
-		Class<?> entityClass = findResourceEntity(resourceMeta.getResource());
+
+		Class<?> entityClass = resourceService.findResourceEntity(resourceMeta.getResource());
 		resourceMeta.setEntityClass(entityClass);
 
 		return resourceMeta;
 	}
 
-	public Class<?> findResourceEntity(String resourceName) {
-		List<Class<?>> classes = classFinder.findHavingAnnotation(RamailoResource.class);
-		for (Class<?> cls : classes) {
-			RamailoResource annotation = cls.getAnnotation(RamailoResource.class);
-
-			if (annotation.value().equals(resourceName)) {
-				return cls;
-			}
-		}
-		throw new ResourceNotFoundException();
-	}
 }
