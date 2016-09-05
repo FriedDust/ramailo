@@ -15,9 +15,18 @@ public class Resource implements Serializable {
 
 	private String name;
 	private String label;
+	private String type;
 	
 	private List<Attribute> attributes = new ArrayList<>();
 	private List<Annotation> annotations = new ArrayList<>();
+	
+	public String getType() {
+		return type;
+	}
+	
+	public void setType(String type) {
+		this.type = type;
+	}
 
 	public String getLabel() {
 		return label;

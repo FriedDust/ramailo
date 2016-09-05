@@ -33,6 +33,7 @@ public class MetaService {
 		List<Attribute> attributes = readAttributes();
 
 		resource.setName(resourceName);
+		resource.setType(clazz.getSimpleName());
 		resource.setLabel(StringUtility.labelize(resourceName));
 		resource.setAttributes(attributes);
 		resource.setAnnotations(readAnnotations());
