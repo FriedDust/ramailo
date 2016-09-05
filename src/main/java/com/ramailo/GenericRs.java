@@ -39,9 +39,17 @@ public class GenericRs {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response getAction() {
 		ResourceMeta resource = pathParser.parse(uriInfo);
-		List<?> result = genericService.findAll(resource);
 
-		return Response.ok().entity(result).build();
+		if (resource.getId() == null) {
+			List<?> result = genericService.findAll(resource);
+
+			return Response.ok().entity(result).build();
+		} else {
+			Object result = genericService.findById(resource);
+
+			return Response.ok().entity(result).build();
+		}
+
 	}
 
 	@POST

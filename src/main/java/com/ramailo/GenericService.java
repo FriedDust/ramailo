@@ -32,6 +32,13 @@ public class GenericService {
 		return result;
 	}
 
+	public Object findById(ResourceMeta resource) {
+		Integer id = Integer.valueOf(resource.getId());
+		Object result = em.find(resource.getEntityClass(), id);
+
+		return result;
+	}
+
 	public Object create(ResourceMeta resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
