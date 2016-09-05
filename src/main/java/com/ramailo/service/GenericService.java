@@ -50,7 +50,7 @@ public class GenericService {
 
 			return entity;
 		} catch (IOException e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
@@ -70,9 +70,9 @@ public class GenericService {
 
 			return entity;
 		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e.getMessage());
 		} catch (IOException e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 
