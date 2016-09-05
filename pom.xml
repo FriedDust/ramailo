@@ -13,7 +13,6 @@
 			<version>7.0</version>
 		</dependency>
 
-
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
@@ -27,6 +26,5 @@
 			<artifactId>commons-beanutils</artifactId>
 			<version>1.9.2</version>
 		</dependency>
-
 	</dependencies>
 </project>
