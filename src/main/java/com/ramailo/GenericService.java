@@ -25,17 +25,17 @@ public class GenericService {
 	@Inject
 	private EntityManager em;
 
-	public List<?> findAll(Class<?> clazz) {
-		String jpql = "select x from " + clazz.getSimpleName() + " x";
+	public List<?> findAll(ResourceMeta resource) {
+		String jpql = "select x from " + resource.getEntityClass().getSimpleName() + " x";
 		List<?> result = em.createQuery(jpql).getResultList();
 
 		return result;
 	}
 
-	public Object create(Class<?> clazz, JsonObject object) {
+	public Object create(ResourceMeta resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			Object entity = mapper.readValue(object.toString(), clazz);
+			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
 			em.persist(entity);
 			em.flush();
 
@@ -45,12 +45,12 @@ public class GenericService {
 		}
 	}
 
-	public Object update(Class<?> clazz, Object pk, JsonObject object) {
+	public Object update(ResourceMeta resource, Object pk, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		Integer id = Integer.valueOf(pk.toString());
 		try {
-			Object entity = mapper.readValue(object.toString(), clazz);
-			Object existing = em.find(clazz, id);
+			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
+			Object existing = em.find(resource.getEntityClass(), id);
 			if (existing == null)
 				throw new ResourceNotFoundException();
 
@@ -67,9 +67,9 @@ public class GenericService {
 		}
 	}
 
-	public void remove(Class<?> clazz, Object pk) {
+	public void remove(ResourceMeta resource, Object pk) {
 		Integer id = Integer.valueOf(pk.toString());
-		Object existing = em.find(clazz, id);
+		Object existing = em.find(resource.getEntityClass(), id);
 		if (existing == null)
 			throw new ResourceNotFoundException();
 

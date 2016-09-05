@@ -6,17 +6,26 @@ package com.ramailo;
  *
  */
 public class ResourceMeta {
-	private String entity;
+	private String resource;
+	private Class<?> entityClass;
 	private String id;
-
-	public String getEntity() {
-		return entity;
+	
+	public Class<?> getEntityClass() {
+		return entityClass;
+	}
+	
+	public void setEntityClass(Class<?> entityClass) {
+		this.entityClass = entityClass;
 	}
 
-	public void setEntity(String entity) {
-		this.entity = entity;
+	public String getResource() {
+		return resource;
 	}
-
+	
+	public void setResource(String resource) {
+		this.resource = resource;
+	}
+	
 	public String getId() {
 		return id;
 	}

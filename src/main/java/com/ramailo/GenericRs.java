@@ -31,9 +31,6 @@ public class GenericRs {
 	private PathParser pathParser;
 
 	@Inject
-	private Processor processor;
-
-	@Inject
 	private GenericService genericService;
 
 	@GET
@@ -41,54 +38,42 @@ public class GenericRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response getAction() {
-		Class<?> clazz = findResource();
-		List<?> result = genericService.findAll(clazz);
+		ResourceMeta resource = pathParser.parse(uriInfo);
+		List<?> result = genericService.findAll(resource);
 
 		return Response.ok().entity(result).build();
 	}
-	
+
 	@POST
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response postAction(JsonObject object) {
-		
-		Class<?> clazz = findResource();
-		Object result = genericService.create(clazz, object);
+		ResourceMeta resource = pathParser.parse(uriInfo);
+		Object result = genericService.create(resource, object);
 
 		return Response.ok().entity(result).build();
 	}
-	
+
 	@PUT
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response putAction(JsonObject object) {
 		ResourceMeta resource = pathParser.parse(uriInfo);
-		
-		Class<?> clazz = findResource();
-		Object result = genericService.update(clazz, resource.getId(), object);
+		Object result = genericService.update(resource, resource.getId(), object);
 
 		return Response.ok().entity(result).build();
 	}
-	
+
 	@DELETE
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response deleteAction(JsonObject object) {
 		ResourceMeta resource = pathParser.parse(uriInfo);
-		
-		Class<?> clazz = findResource();
-		genericService.remove(clazz, resource.getId());
+		genericService.remove(resource, resource.getId());
 
 		return Response.ok().build();
-	}
-
-	private Class<?> findResource() {
-		 ResourceMeta resource = pathParser.parse(uriInfo);
-		 Class<?> clazz = processor.process(resource);
-		
-		 return clazz;
 	}
 }
