@@ -16,7 +16,5 @@ public @interface RamailoResource {
 	
 	String value();
 	
-	String type();
-	
 	String stringify();
 }
