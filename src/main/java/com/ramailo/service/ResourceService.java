@@ -1,7 +1,8 @@
 package com.ramailo.service;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.inject.Inject;
 
@@ -20,10 +21,10 @@ public class ResourceService {
 	@Inject
 	private ClassFinder classFinder;
 
-	public List<Resource> findResources() {
-		List<Resource> resources = new ArrayList<>();
+	public Set<Resource> findResources() {
+		Set<Resource> resources = new HashSet<>();
 
-		List<Class<?>> classes = findAll();
+		Set<Class<?>> classes = findAll();
 		for (Class<?> cls : classes) {
 			MetaService metaService = new MetaService(cls);
 			Resource resource = metaService.read();
@@ -34,12 +35,12 @@ public class ResourceService {
 		return resources;
 	}
 
-	public List<Class<?>> findAll() {
+	public Set<Class<?>> findAll() {
 		return classFinder.findHavingAnnotation(RamailoResource.class);
 	}
 
 	public Class<?> findResourceEntity(String resourceName) {
-		List<Class<?>> classes = findAll();
+		Set<Class<?>> classes = findAll();
 		for (Class<?> cls : classes) {
 			RamailoResource annotation = cls.getAnnotation(RamailoResource.class);
 

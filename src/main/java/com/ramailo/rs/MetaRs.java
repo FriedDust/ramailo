@@ -1,6 +1,6 @@
 package com.ramailo.rs;
 
-import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -38,7 +38,7 @@ public class MetaRs {
 	@Path("/")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response indexAction() {
-		List<Resource> resources = resourceService.findResources();
+		Set<Resource> resources = resourceService.findResources();
 		return Response.ok().entity(resources).build();
 	}
 

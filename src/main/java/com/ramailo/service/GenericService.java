@@ -44,6 +44,8 @@ public class GenericService {
 	public Object create(ResourceMeta resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
+			System.out.println(object.toString());
+			System.out.println(resource.getEntityClass());
 			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
 			em.persist(entity);
 			em.flush();

@@ -61,6 +61,7 @@ public class GenericRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response postAction(JsonObject object) {
+		System.out.println("-->" + object.toString());
 		ResourceMeta resource = pathParser.parse(uriInfo);
 		Object result = genericService.create(resource, object);
 
