@@ -35,7 +35,7 @@ public class GenericService {
 	}
 
 	public Object findById(ResourceMeta resource) {
-		Object id = PkUtility.castToPkType(resource);
+		Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getResourceId());
 		Object result = em.find(resource.getEntityClass(), id);
 
 		return result;
@@ -64,11 +64,12 @@ public class GenericService {
 			if (existing == null)
 				throw new ResourceNotFoundException();
 
+			BeanUtils.copyProperties(existing, entity);
 			BeanUtils.setProperty(entity, "id", id);
 
-			em.merge(entity);
+			em.merge(existing);
 			em.flush();
-			em.refresh(entity);
+			em.refresh(existing);
 
 			return entity;
 		} catch (IllegalAccessException | InvocationTargetException e) {
