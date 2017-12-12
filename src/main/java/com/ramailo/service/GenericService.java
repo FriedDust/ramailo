@@ -68,6 +68,7 @@ public class GenericService {
 
 			em.merge(entity);
 			em.flush();
+			em.refresh(entity);
 
 			return entity;
 		} catch (IllegalAccessException | InvocationTargetException e) {
