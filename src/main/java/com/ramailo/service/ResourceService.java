@@ -6,7 +6,7 @@ import java.util.HashSet;
 
 import javax.inject.Inject;
 
-import com.ramailo.RamailoResource;
+import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.meta.Resource;
 import com.ramailo.util.ClassFinder;

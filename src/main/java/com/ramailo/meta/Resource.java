@@ -16,14 +16,22 @@ public class Resource implements Serializable {
 	private String name;
 	private String label;
 	private String type;
-	
+	private String stringify;
+
 	private List<Attribute> attributes = new ArrayList<>();
-	private List<Annotation> annotations = new ArrayList<>();
-	
+
+	public String getStringify() {
+		return stringify;
+	}
+
+	public void setStringify(String stringify) {
+		this.stringify = stringify;
+	}
+
 	public String getType() {
 		return type;
 	}
-	
+
 	public void setType(String type) {
 		this.type = type;
 	}
@@ -31,11 +39,11 @@ public class Resource implements Serializable {
 	public String getLabel() {
 		return label;
 	}
-	
+
 	public void setLabel(String label) {
 		this.label = label;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -51,13 +59,4 @@ public class Resource implements Serializable {
 	public void setAttributes(List<Attribute> attributes) {
 		this.attributes = attributes;
 	}
-
-	public List<Annotation> getAnnotations() {
-		return annotations;
-	}
-
-	public void setAnnotations(List<Annotation> annotations) {
-		this.annotations = annotations;
-	}
-
 }
