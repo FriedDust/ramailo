@@ -30,7 +30,7 @@ public class PathParser {
 		}
 
 		if (segments.size() > 1) {
-			resourceMeta.setId(segments.get(1).toString());
+			resourceMeta.setResourceId(segments.get(1).toString());
 		}
 
 		return resourceMeta;

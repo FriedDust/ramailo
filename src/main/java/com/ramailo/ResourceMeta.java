@@ -8,12 +8,12 @@ package com.ramailo;
 public class ResourceMeta {
 	private String resource;
 	private Class<?> entityClass;
-	private String id;
-	
+	private String resourceId;
+
 	public Class<?> getEntityClass() {
 		return entityClass;
 	}
-	
+
 	public void setEntityClass(Class<?> entityClass) {
 		this.entityClass = entityClass;
 	}
@@ -21,17 +21,17 @@ public class ResourceMeta {
 	public String getResource() {
 		return resource;
 	}
-	
+
 	public void setResource(String resource) {
 		this.resource = resource;
 	}
-	
-	public String getId() {
-		return id;
+
+	public String getResourceId() {
+		return resourceId;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public void setResourceId(String id) {
+		this.resourceId = id;
 	}
 
 }

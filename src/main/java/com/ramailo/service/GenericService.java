@@ -58,7 +58,7 @@ public class GenericService {
 	public Object update(ResourceMeta resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			Object id = PkUtility.castToPkType(resource);
+			Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getResourceId());
 			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
 			Object existing = em.find(resource.getEntityClass(), id);
 			if (existing == null)
@@ -79,7 +79,7 @@ public class GenericService {
 	}
 
 	public void remove(ResourceMeta resource) {
-		Object id = PkUtility.castToPkType(resource);
+		Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getResourceId());
 		Object existing = em.find(resource.getEntityClass(), id);
 		if (existing == null)
 			throw new ResourceNotFoundException();

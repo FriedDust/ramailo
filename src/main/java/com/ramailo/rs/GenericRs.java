@@ -44,7 +44,7 @@ public class GenericRs {
 	public Response getAction() {
 		ResourceMeta resource = pathParser.parse(uriInfo);
 
-		if (resource.getId() == null) {
+		if (resource.getResourceId() == null) {
 			List<?> result = genericService.findAll(resource);
 
 			return Response.ok().entity(result).build();
