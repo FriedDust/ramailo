@@ -5,10 +5,15 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
 import com.ramailo.annotation.RamailoField;
 import com.ramailo.annotation.RamailoList;
 import com.ramailo.annotation.RamailoResource;
 import com.ramailo.meta.Attribute;
+import com.ramailo.meta.AutoPkAttribute;
 import com.ramailo.meta.ListAttribute;
 import com.ramailo.meta.Resource;
 import com.ramailo.util.StringUtility;
@@ -49,14 +54,20 @@ public class MetaService {
 			if (Modifier.isStatic(field.getModifiers()))
 				continue;
 
-			if (field.isAnnotationPresent(RamailoList.class)) {
-				Attribute attribute = readRamailoList(field);
-				attributes.add(attribute);
-			} else if (field.isAnnotationPresent(RamailoField.class)) {
-				Attribute attribute = readRamailoField(field);
-				attributes.add(attribute);
-			}
+			Attribute attribute = null;
 
+			if (field.isAnnotationPresent(RamailoList.class)) {
+				attribute = readRamailoList(field);
+
+			} else if (field.isAnnotationPresent(RamailoField.class)) {
+				if (field.isAnnotationPresent(Id.class)) {
+					attribute = readRamailoPkField(field);
+				} else {
+					attribute = readRamailoField(field);
+				}
+
+			}
+			attributes.add(attribute);
 		}
 
 		return attributes;
@@ -89,6 +100,22 @@ public class MetaService {
 		attribute.setName(name);
 		attribute.setLabel(label);
 		attribute.setType(field.getType().getSimpleName());
+
+		return attribute;
+	}
+
+	private Attribute readRamailoPkField(Field field) {
+		AutoPkAttribute attribute = new AutoPkAttribute();
+		Attribute attr = readRamailoField(field);
+
+		if (field.isAnnotationPresent(GeneratedValue.class)
+				&& field.getAnnotation(GeneratedValue.class).strategy().equals(GenerationType.IDENTITY)) {
+			attribute.setAutoPk(true);
+		}
+
+		attribute.setLabel(attr.getLabel());
+		attribute.setName(attr.getName());
+		attribute.setType(attr.getType());
 
 		return attribute;
 	}
