@@ -9,11 +9,10 @@ import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.persistence.EntityManager;
 
-import org.apache.commons.beanutils.BeanUtils;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramailo.ResourceMeta;
 import com.ramailo.exception.ResourceNotFoundException;
+import com.ramailo.util.AttributeUtility;
 import com.ramailo.util.PkUtility;
 
 /**
@@ -58,21 +57,22 @@ public class GenericService {
 	public Object update(ResourceMeta resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getResourceId());
-			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
-			Object existing = em.find(resource.getEntityClass(), id);
+			Object idFromUrl = PkUtility.castToPkType(resource.getEntityClass(), resource.getResourceId());
+			Object source = mapper.readValue(object.toString(), resource.getEntityClass());
+			Object existing = em.find(resource.getEntityClass(), idFromUrl);
 			if (existing == null)
 				throw new ResourceNotFoundException();
 
-			BeanUtils.copyProperties(existing, entity);
-			BeanUtils.setProperty(entity, "id", id);
+			// BeanUtils.copyProperties(existing, entity);
+			// BeanUtils.setProperty(entity, "id", id);
+			AttributeUtility.copyAttributes(existing, source);
 
 			em.merge(existing);
 			em.flush();
 			em.refresh(existing);
 
-			return entity;
-		} catch (IllegalAccessException | InvocationTargetException e) {
+			return existing;
+		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 			throw new RuntimeException(e.getMessage());
 		} catch (IOException e) {
 			throw new RuntimeException(e.getMessage());
