@@ -1,6 +1,7 @@
 package com.ramailo.service;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -8,6 +9,10 @@ import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramailo.ResourceMeta;
@@ -27,10 +32,22 @@ public class GenericService {
 	private EntityManager em;
 
 	public List<?> findAll(ResourceMeta resource) {
-		String jpql = "select x from " + resource.getEntityClass().getSimpleName() + " x";
-		List<?> result = em.createQuery(jpql).getResultList();
-
-		return result;
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<?> cquery = cb.createQuery(resource.getEntityClass());
+		Root<?> root = cquery.from(resource.getEntityClass());
+		cquery.from(resource.getEntityClass());
+		
+		Field autoPkField = PkUtility.findAutoPkField(resource.getEntityClass());
+		if (autoPkField != null) {
+			cquery.orderBy(cb.desc(root.get(autoPkField.getName())));
+		}
+		
+		TypedQuery<?> tquery = em.createQuery(cquery);
+		return tquery.getResultList();
+		
+		// String jpql = "select x from " + resource.getEntityClass().getSimpleName() +
+		// " x";
+		// List<?> result = em.createQuery(jpql).getResultList();
 	}
 
 	public Object findById(ResourceMeta resource) {

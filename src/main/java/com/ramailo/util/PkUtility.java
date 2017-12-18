@@ -2,6 +2,8 @@ package com.ramailo.util;
 
 import java.lang.reflect.Field;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 /**
@@ -16,6 +18,16 @@ public class PkUtility {
 		Class<?> type = field.getType();
 
 		return TypeCaster.cast(value, type);
+	}
+
+	public static Field findAutoPkField(Class<?> entity) {
+		for (Field field : entity.getDeclaredFields()) {
+			if (field.isAnnotationPresent(GeneratedValue.class)
+					&& field.getAnnotation(GeneratedValue.class).strategy().equals(GenerationType.IDENTITY)) {
+				return field;
+			}
+		}
+		return null;
 	}
 
 	private static Field findPkField(Class<?> entity) {
