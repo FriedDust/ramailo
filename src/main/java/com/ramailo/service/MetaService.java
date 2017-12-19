@@ -42,6 +42,7 @@ public class MetaService {
 		resource.setLabel(StringUtility.labelize(resourceName));
 		resource.setStringify(resourceAnnotation.stringify());
 		resource.setAttributes(attributes);
+		resource.setGridHeaders(resourceAnnotation.gridHeaders());
 
 		return resource;
 	}

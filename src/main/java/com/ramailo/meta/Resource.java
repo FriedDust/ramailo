@@ -17,8 +17,17 @@ public class Resource implements Serializable {
 	private String label;
 	private String type;
 	private String stringify;
+	private String[] gridHeaders;
 
 	private List<Attribute> attributes = new ArrayList<>();
+
+	public String[] getGridHeaders() {
+		return gridHeaders;
+	}
+
+	public void setGridHeaders(String[] gridHeaders) {
+		this.gridHeaders = gridHeaders;
+	}
 
 	public String getStringify() {
 		return stringify;
