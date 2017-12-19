@@ -1,6 +1,7 @@
 package com.ramailo.service;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,9 +10,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import com.ramailo.annotation.RamailoAction;
 import com.ramailo.annotation.RamailoField;
 import com.ramailo.annotation.RamailoList;
 import com.ramailo.annotation.RamailoResource;
+import com.ramailo.meta.Action;
 import com.ramailo.meta.Attribute;
 import com.ramailo.meta.AutoPkAttribute;
 import com.ramailo.meta.ListAttribute;
@@ -36,15 +39,63 @@ public class MetaService {
 		RamailoResource resourceAnnotation = readResourceAnnotation();
 		String resourceName = resourceAnnotation.value();
 		List<Attribute> attributes = readAttributes();
+		List<Action> actions = readActions();
+		List<Action> staticActions = readStaticActions();
 
 		resource.setName(resourceName);
 		resource.setType(clazz.getSimpleName());
 		resource.setLabel(StringUtility.labelize(resourceName));
 		resource.setStringify(resourceAnnotation.stringify());
 		resource.setAttributes(attributes);
+		resource.setActions(actions);
+		resource.setStaticActions(staticActions);
 		resource.setGridHeaders(resourceAnnotation.gridHeaders());
 
 		return resource;
+	}
+
+	private List<Action> readActions() {
+		List<Action> actions = new ArrayList<>();
+
+		Class<? extends BaseActions<?>> actionClass[] = clazz.getAnnotation(RamailoResource.class).actions();
+		if (actionClass.length == 0)
+			return actions;
+
+		for (Method method : actionClass[0].getDeclaredMethods()) {
+			if (!Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(RamailoAction.class)) {
+				RamailoAction annotation = method.getAnnotation(RamailoAction.class);
+				String label = annotation.label();
+				label = label.isEmpty() ? StringUtility.labelize(method.getName()) : label;
+
+				Action action = new Action();
+				action.setName(method.getName());
+				action.setLabel(label);
+				actions.add(action);
+			}
+		}
+		return actions;
+	}
+
+	private List<Action> readStaticActions() {
+		List<Action> actions = new ArrayList<>();
+
+		Class<? extends BaseActions<?>> actionClass[] = clazz.getAnnotation(RamailoResource.class).actions();
+		if (actionClass.length == 0)
+			return actions;
+
+		for (Method method : actionClass[0].getDeclaredMethods()) {
+			if (Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(RamailoAction.class)) {
+				RamailoAction annotation = method.getAnnotation(RamailoAction.class);
+				String label = annotation.label();
+				label = label.isEmpty() ? StringUtility.labelize(method.getName()) : label;
+
+				Action action = new Action();
+				action.setName(method.getName());
+				action.setLabel(label);
+				actions.add(action);
+			}
+		}
+		return actions;
 	}
 
 	private List<Attribute> readAttributes() {

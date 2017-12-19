@@ -20,6 +20,24 @@ public class Resource implements Serializable {
 	private String[] gridHeaders;
 
 	private List<Attribute> attributes = new ArrayList<>();
+	private List<Action> actions = new ArrayList<>();
+	private List<Action> staticActions = new ArrayList<>();
+
+	public List<Action> getStaticActions() {
+		return staticActions;
+	}
+
+	public void setStaticActions(List<Action> staticActions) {
+		this.staticActions = staticActions;
+	}
+
+	public List<Action> getActions() {
+		return actions;
+	}
+
+	public void setActions(List<Action> actions) {
+		this.actions = actions;
+	}
 
 	public String[] getGridHeaders() {
 		return gridHeaders;
