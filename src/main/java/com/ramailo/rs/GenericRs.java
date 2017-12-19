@@ -13,12 +13,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import com.ramailo.PathParser;
 import com.ramailo.ResourceMeta;
 import com.ramailo.service.GenericService;
+import com.ramailo.util.QueryParamUtility;
 
 /**
  * 
@@ -45,7 +47,8 @@ public class GenericRs {
 		ResourceMeta resource = pathParser.parse(uriInfo);
 
 		if (resource.getResourceId() == null) {
-			List<?> result = genericService.findAll(resource);
+			List<?> result = genericService.find(resource,
+					QueryParamUtility.convert((MultivaluedMap<String, String>) uriInfo.getQueryParameters()));
 
 			return Response.ok().entity(result).build();
 		} else {
