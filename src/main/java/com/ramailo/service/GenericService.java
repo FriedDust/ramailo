@@ -3,6 +3,7 @@ package com.ramailo.service;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -14,10 +15,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramailo.ResourceMeta;
+import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.util.AttributeUtility;
 import com.ramailo.util.PkUtility;
@@ -40,34 +45,42 @@ public class GenericService {
 		CriteriaQuery cquery = cb.createQuery(resource.getEntityClass());
 		//
 		Root<?> root = cquery.from(resource.getEntityClass());
-		//cquery.from(resource.getEntityClass());
 		cquery.select(root);
+
+		List<Predicate> predicates = new ArrayList<>();
 
 		for (QueryParam param : params) {
 			try {
 				Field field = resource.getEntityClass().getDeclaredField(param.getKey());
-				
+
 				if (field.isAnnotationPresent(ManyToOne.class)) {
-					
+					Class<?> fieldType = field.getType();
+					String stringifyField = fieldType.getAnnotation(RamailoResource.class).stringify();
+
+					Join<Object, Object> join = root.join(field.getName(), JoinType.LEFT);
+					predicates.add(cb.equal(join.get(stringifyField), param.getValue()));
+
 				} else {
 					if (param.getOperator().equals("eq")) {
-						cquery.where(cb.equal(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.equal(root.get(field.getName()), param.getValue()));
 					} else if (param.getOperator().equals("lt")) {
-						cquery.where(cb.lessThan(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.lessThan(root.get(field.getName()), param.getValue()));
 					} else if (param.getOperator().equals("lte")) {
-						cquery.where(cb.lessThanOrEqualTo(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.lessThanOrEqualTo(root.get(field.getName()), param.getValue()));
 					} else if (param.getOperator().equals("gt")) {
-						cquery.where(cb.greaterThan(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.greaterThan(root.get(field.getName()), param.getValue()));
 					} else if (param.getOperator().equals("gte")) {
-						cquery.where(cb.greaterThanOrEqualTo(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.greaterThanOrEqualTo(root.get(field.getName()), param.getValue()));
 					} else if (param.getOperator().equals("like")) {
-						cquery.where(cb.like(root.get(field.getName()), param.getValue() + "%"));
+						predicates.add(cb.like(root.get(field.getName()), param.getValue() + "%"));
 					}
 				}
 			} catch (NoSuchFieldException | SecurityException e) {
 				e.printStackTrace();
 			}
 		}
+
+		cquery.where(predicates.toArray(new Predicate[0]));
 
 		Field autoPkField = PkUtility.findAutoPkField(resource.getEntityClass());
 		if (autoPkField != null) {
