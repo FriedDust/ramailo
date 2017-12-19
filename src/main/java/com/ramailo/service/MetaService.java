@@ -61,7 +61,7 @@ public class MetaService {
 		if (actionClass.length == 0)
 			return actions;
 
-		for (Method method : actionClass[0].getDeclaredMethods()) {
+		for (Method method : actionClass[0].getMethods()) {
 			if (!Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(RamailoAction.class)) {
 				RamailoAction annotation = method.getAnnotation(RamailoAction.class);
 				String label = annotation.label();
@@ -83,7 +83,7 @@ public class MetaService {
 		if (actionClass.length == 0)
 			return actions;
 
-		for (Method method : actionClass[0].getDeclaredMethods()) {
+		for (Method method : actionClass[0].getMethods()) {
 			if (Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(RamailoAction.class)) {
 				RamailoAction annotation = method.getAnnotation(RamailoAction.class);
 				String label = annotation.label();
