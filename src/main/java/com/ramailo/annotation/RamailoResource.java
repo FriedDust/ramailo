@@ -5,6 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.ramailo.service.BaseActions;
+
 /**
  * 
  * @author Kailash Bijayananda <fried.dust@gmail.com>
@@ -19,4 +21,7 @@ public @interface RamailoResource {
 	String stringify();
 
 	String[] gridHeaders() default {};
+
+	Class<? extends BaseActions<?>>[] actions() default {};
+
 }

@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -26,7 +25,6 @@ import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.util.AttributeUtility;
 import com.ramailo.util.PkUtility;
-import com.ramailo.util.QueryParamUtility;
 import com.ramailo.util.QueryParamUtility.QueryParam;
 
 /**
@@ -98,13 +96,52 @@ public class GenericService {
 		return result;
 	}
 
+	private BaseActions<?> baseActions(Object entity) {
+		for (Class actionClass : entity.getClass().getAnnotation(RamailoResource.class).actions()) {
+			try {
+				BaseActions<?> action = (BaseActions<?>) actionClass.getConstructor(entity.getClass())
+						.newInstance(entity);
+
+				return action;
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return null;
+	}
+
+	private void onBeforeSave(Object entity) {
+		BaseActions<?> action = baseActions(entity);
+		if (action != null) action.onBeforeSave();
+	}
+
+	private void onSave(Object entity) {
+		BaseActions<?> action = baseActions(entity);
+		if (action != null) action.onSave();
+	}
+
+	private void onBeforeDelete(Object entity) {
+		BaseActions<?> action = baseActions(entity);
+		if (action != null) action.onBeforeDelete();
+	}
+
+	private void onDelete(Object entity) {
+		BaseActions<?> action = baseActions(entity);
+		if (action != null) action.onDelete();
+	}
+
 	public Object create(ResourceMeta resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
+
+			onBeforeSave(entity);
 			em.persist(entity);
 			em.flush();
 			em.refresh(entity);
+			onSave(entity);
 
 			return entity;
 		} catch (IOException e) {
@@ -121,13 +158,13 @@ public class GenericService {
 			if (existing == null)
 				throw new ResourceNotFoundException();
 
-			// BeanUtils.copyProperties(existing, entity);
-			// BeanUtils.setProperty(entity, "id", id);
 			AttributeUtility.copyAttributes(existing, source);
 
+			onBeforeSave(existing);
 			em.merge(existing);
 			em.flush();
 			em.refresh(existing);
+			onSave(existing);
 
 			return existing;
 		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
@@ -143,7 +180,9 @@ public class GenericService {
 		if (existing == null)
 			throw new ResourceNotFoundException();
 
+		onBeforeDelete(existing);
 		em.remove(existing);
 		em.flush();
+		onDelete(existing);
 	}
 }
