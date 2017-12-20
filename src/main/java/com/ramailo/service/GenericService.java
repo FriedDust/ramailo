@@ -90,7 +90,7 @@ public class GenericService {
 	}
 
 	public Object findById(ResourceMeta resource) {
-		Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getResourceId());
+		Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getFirstPathParam());
 		Object result = em.find(resource.getEntityClass(), id);
 
 		return result;
@@ -114,22 +114,26 @@ public class GenericService {
 
 	private void onBeforeSave(Object entity) {
 		BaseActions<?> action = baseActions(entity);
-		if (action != null) action.onBeforeSave();
+		if (action != null)
+			action.onBeforeSave();
 	}
 
 	private void onSave(Object entity) {
 		BaseActions<?> action = baseActions(entity);
-		if (action != null) action.onSave();
+		if (action != null)
+			action.onSave();
 	}
 
 	private void onBeforeDelete(Object entity) {
 		BaseActions<?> action = baseActions(entity);
-		if (action != null) action.onBeforeDelete();
+		if (action != null)
+			action.onBeforeDelete();
 	}
 
 	private void onDelete(Object entity) {
 		BaseActions<?> action = baseActions(entity);
-		if (action != null) action.onDelete();
+		if (action != null)
+			action.onDelete();
 	}
 
 	public Object create(ResourceMeta resource, JsonObject object) {
@@ -152,7 +156,7 @@ public class GenericService {
 	public Object update(ResourceMeta resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			Object idFromUrl = PkUtility.castToPkType(resource.getEntityClass(), resource.getResourceId());
+			Object idFromUrl = PkUtility.castToPkType(resource.getEntityClass(), resource.getFirstPathParam());
 			Object source = mapper.readValue(object.toString(), resource.getEntityClass());
 			Object existing = em.find(resource.getEntityClass(), idFromUrl);
 			if (existing == null)
@@ -175,7 +179,7 @@ public class GenericService {
 	}
 
 	public void remove(ResourceMeta resource) {
-		Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getResourceId());
+		Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getFirstPathParam());
 		Object existing = em.find(resource.getEntityClass(), id);
 		if (existing == null)
 			throw new ResourceNotFoundException();

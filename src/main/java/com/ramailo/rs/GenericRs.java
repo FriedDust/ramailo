@@ -46,7 +46,7 @@ public class GenericRs {
 	public Response getAction() {
 		ResourceMeta resource = pathParser.parse(uriInfo);
 
-		if (resource.getResourceId() == null) {
+		if (resource.getFirstPathParam() == null) {
 			List<?> result = genericService.find(resource,
 					QueryParamUtility.convert((MultivaluedMap<String, String>) uriInfo.getQueryParameters()));
 

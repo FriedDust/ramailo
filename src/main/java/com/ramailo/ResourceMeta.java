@@ -1,5 +1,8 @@
 package com.ramailo;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 
  * @author Kailash Bijayananda <fried.dust@gmail.com>
@@ -8,7 +11,15 @@ package com.ramailo;
 public class ResourceMeta {
 	private String resource;
 	private Class<?> entityClass;
-	private String resourceId;
+	private List<String> pathParams = new ArrayList<>();
+
+	public List<String> getPathParams() {
+		return pathParams;
+	}
+
+	public void setPathParams(List<String> pathParams) {
+		this.pathParams = pathParams;
+	}
 
 	public Class<?> getEntityClass() {
 		return entityClass;
@@ -26,12 +37,15 @@ public class ResourceMeta {
 		this.resource = resource;
 	}
 
-	public String getResourceId() {
-		return resourceId;
+	public String getFirstPathParam() {
+		return pathParams.size() > 1 ? pathParams.get(1) : null;
 	}
 
-	public void setResourceId(String id) {
-		this.resourceId = id;
+	public String getSecondPathParam() {
+		return pathParams.size() > 2 ? pathParams.get(2) : null;
 	}
 
+	public String getThirdPathParam() {
+		return pathParams.size() > 3 ? pathParams.get(3) : null;
+	}
 }

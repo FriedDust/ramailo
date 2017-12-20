@@ -22,6 +22,10 @@ public class PathParser {
 		List<PathSegment> segments = uriInfo.getPathSegments();
 		ResourceMeta resourceMeta = new ResourceMeta();
 
+		for (PathSegment ps : segments) {
+			resourceMeta.getPathParams().add(ps.toString());
+		}
+
 		if (segments.size() > 0) {
 			resourceMeta.setResource(segments.get(0).toString());
 
@@ -29,21 +33,6 @@ public class PathParser {
 			resourceMeta.setEntityClass(entityClass);
 		}
 
-		if (segments.size() > 1) {
-			resourceMeta.setResourceId(segments.get(1).toString());
-		}
-
 		return resourceMeta;
 	}
-
-	public ResourceMeta parseMeta(String resourceName) {
-		ResourceMeta resourceMeta = new ResourceMeta();
-		resourceMeta.setResource(resourceName);
-
-		Class<?> entityClass = resourceService.findResourceEntity(resourceMeta.getResource());
-		resourceMeta.setEntityClass(entityClass);
-
-		return resourceMeta;
-	}
-
 }
