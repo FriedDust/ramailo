@@ -74,6 +74,7 @@ public class MetaService {
 				Action action = new Action();
 				action.setName(method.getName());
 				action.setPathName(pathName);
+				action.setMethodType(annotation.methodType());
 				action.setLabel(label);
 				actions.add(action);
 			}
@@ -101,6 +102,7 @@ public class MetaService {
 				Action action = new Action();
 				action.setName(method.getName());
 				action.setPathName(pathName);
+				action.setMethodType(annotation.methodType());
 				action.setLabel(label);
 				actions.add(action);
 			}

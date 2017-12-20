@@ -4,7 +4,16 @@ public class Action {
 
 	private String name;
 	private String pathName;
+	private String methodType;
 	private String label;
+
+	public String getMethodType() {
+		return methodType;
+	}
+
+	public void setMethodType(String methodType) {
+		this.methodType = methodType;
+	}
 
 	public String getPathName() {
 		return pathName;
