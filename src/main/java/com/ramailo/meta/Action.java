@@ -1,11 +1,24 @@
 package com.ramailo.meta;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Action {
 
 	private String name;
 	private String pathName;
 	private String methodType;
 	private String label;
+
+	private List<Argument> arguments = new ArrayList<>();
+
+	public List<Argument> getArguments() {
+		return arguments;
+	}
+
+	public void setArguments(List<Argument> arguments) {
+		this.arguments = arguments;
+	}
 
 	public String getMethodType() {
 		return methodType;

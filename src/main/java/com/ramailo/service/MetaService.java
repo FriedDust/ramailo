@@ -3,6 +3,7 @@ package com.ramailo.service;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,10 +12,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import com.ramailo.annotation.RamailoAction;
+import com.ramailo.annotation.RamailoArg;
 import com.ramailo.annotation.RamailoField;
 import com.ramailo.annotation.RamailoList;
 import com.ramailo.annotation.RamailoResource;
 import com.ramailo.meta.Action;
+import com.ramailo.meta.Argument;
 import com.ramailo.meta.Attribute;
 import com.ramailo.meta.AutoPkAttribute;
 import com.ramailo.meta.ListAttribute;
@@ -54,6 +57,26 @@ public class MetaService {
 		return resource;
 	}
 
+	private List<Argument> readArguments(Method method) {
+		List<Argument> args = new ArrayList<>();
+
+		for (Parameter param : method.getParameters()) {
+			Argument arg = new Argument();
+			RamailoArg annotation = param.getAnnotation(RamailoArg.class);
+
+			String label = annotation.label();
+			label = label.isEmpty() ? StringUtility.labelize(annotation.name()) : label;
+
+			arg.setName(annotation.name());
+			arg.setLabel(label);
+			arg.setType(param.getType().getSimpleName());
+
+			args.add(arg);
+		}
+
+		return args;
+	}
+
 	private List<Action> readActions() {
 		List<Action> actions = new ArrayList<>();
 
@@ -64,10 +87,10 @@ public class MetaService {
 		for (Method method : actionClass[0].getMethods()) {
 			if (!Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(RamailoAction.class)) {
 				RamailoAction annotation = method.getAnnotation(RamailoAction.class);
-				
+
 				String label = annotation.label();
 				label = label.isEmpty() ? StringUtility.labelize(method.getName()) : label;
-				
+
 				String pathName = annotation.pathName();
 				pathName = pathName.isEmpty() ? method.getName() : pathName;
 
@@ -76,6 +99,7 @@ public class MetaService {
 				action.setPathName(pathName);
 				action.setMethodType(annotation.methodType());
 				action.setLabel(label);
+				action.setArguments(readArguments(method));
 				actions.add(action);
 			}
 		}
@@ -92,10 +116,10 @@ public class MetaService {
 		for (Method method : actionClass[0].getMethods()) {
 			if (Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(RamailoAction.class)) {
 				RamailoAction annotation = method.getAnnotation(RamailoAction.class);
-				
+
 				String label = annotation.label();
 				label = label.isEmpty() ? StringUtility.labelize(method.getName()) : label;
-				
+
 				String pathName = annotation.pathName();
 				pathName = pathName.isEmpty() ? method.getName() : pathName;
 
@@ -104,6 +128,7 @@ public class MetaService {
 				action.setPathName(pathName);
 				action.setMethodType(annotation.methodType());
 				action.setLabel(label);
+				action.setArguments(readArguments(method));
 				actions.add(action);
 			}
 		}

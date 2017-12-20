@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RamailoArg {
 
-	public String name() default "";
+	public String name();
 
 	public String label() default "";
 
