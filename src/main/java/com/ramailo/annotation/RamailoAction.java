@@ -16,4 +16,5 @@ public @interface RamailoAction {
 
 	String label() default "";
 
+	String pathName() default "";
 }

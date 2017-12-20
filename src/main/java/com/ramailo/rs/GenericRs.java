@@ -1,6 +1,7 @@
 package com.ramailo.rs;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.json.JsonObject;
@@ -19,7 +20,10 @@ import javax.ws.rs.core.UriInfo;
 
 import com.ramailo.PathParser;
 import com.ramailo.ResourceMeta;
+import com.ramailo.meta.Action;
+import com.ramailo.meta.Resource;
 import com.ramailo.service.GenericService;
+import com.ramailo.service.MetaService;
 import com.ramailo.util.QueryParamUtility;
 
 /**
@@ -44,19 +48,54 @@ public class GenericRs {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response getAction() {
-		ResourceMeta resource = pathParser.parse(uriInfo);
+		try {
+			ResourceMeta resourceMeta = pathParser.parse(uriInfo);
+			MetaService metaService = new MetaService(resourceMeta.getEntityClass());
+			Resource resource = metaService.read();
+			Action staticAction = null;
+			Action action = null;
 
-		if (resource.getFirstPathParam() == null) {
-			List<?> result = genericService.find(resource,
+			if (resourceMeta.getFirstPathParam() != null) {
+				List<Action> matches = resource.getStaticActions().stream()
+						.filter(act -> act.getPathName().equals(resourceMeta.getFirstPathParam()))
+						.collect(Collectors.toList());
+
+				if (matches.size() > 0) {
+					staticAction = matches.get(0);
+				}
+			}
+			if (resourceMeta.getSecondPathParam() != null) {
+				List<Action> matches = resource.getActions().stream()
+						.filter(act -> act.getPathName().equals(resourceMeta.getSecondPathParam()))
+						.collect(Collectors.toList());
+
+				if (matches.size() > 0) {
+					action = matches.get(0);
+				}
+			}
+
+			if (staticAction != null) {
+				Object result = genericService.invokeStaticAction(resourceMeta, staticAction);
+				return Response.ok().entity(result).build();
+			}
+
+			if (action != null) {
+				Object result = genericService.invokeAction(resourceMeta, action);
+				return Response.ok().entity(result).build();
+			}
+
+			if (resourceMeta.getFirstPathParam() != null) {
+				Object result = genericService.findById(resourceMeta);
+				return Response.ok().entity(result).build();
+			}
+
+			List<?> result = genericService.find(resourceMeta,
 					QueryParamUtility.convert((MultivaluedMap<String, String>) uriInfo.getQueryParameters()));
 
 			return Response.ok().entity(result).build();
-		} else {
-			Object result = genericService.findById(resource);
-
-			return Response.ok().entity(result).build();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
-
 	}
 
 	@POST

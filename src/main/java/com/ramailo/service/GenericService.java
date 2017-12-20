@@ -3,6 +3,7 @@ package com.ramailo.service;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramailo.ResourceMeta;
 import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
+import com.ramailo.meta.Action;
 import com.ramailo.util.AttributeUtility;
 import com.ramailo.util.PkUtility;
 import com.ramailo.util.QueryParamUtility.QueryParam;
@@ -188,5 +190,35 @@ public class GenericService {
 		em.remove(existing);
 		em.flush();
 		onDelete(existing);
+	}
+
+	private Method findActionMethod(Class clazz, String methodName) {
+		for (Method method : clazz.getMethods()) {
+			if (method.getName().equals(methodName))
+				return method;
+		}
+		return null;
+	}
+
+	private Object invokeMethod(Object actionObject, Method method, Object... args)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		return method.invoke(actionObject, args);
+	}
+
+	public Object invokeStaticAction(ResourceMeta resourceMeta, Action action)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Class actionClass = resourceMeta.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
+		Method method = findActionMethod(actionClass, action.getName());
+
+		return invokeMethod(null, method, new Object[0]);
+	}
+
+	public Object invokeAction(ResourceMeta resourceMeta, Action action)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Object entity = this.findById(resourceMeta);
+		BaseActions<?> actionObject = baseActions(entity);
+		Method method = findActionMethod(actionObject.getClass(), action.getName());
+
+		return invokeMethod(actionObject, method, new Object[0]);
 	}
 }

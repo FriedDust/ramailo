@@ -64,11 +64,16 @@ public class MetaService {
 		for (Method method : actionClass[0].getMethods()) {
 			if (!Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(RamailoAction.class)) {
 				RamailoAction annotation = method.getAnnotation(RamailoAction.class);
+				
 				String label = annotation.label();
 				label = label.isEmpty() ? StringUtility.labelize(method.getName()) : label;
+				
+				String pathName = annotation.pathName();
+				pathName = pathName.isEmpty() ? method.getName() : pathName;
 
 				Action action = new Action();
 				action.setName(method.getName());
+				action.setPathName(pathName);
 				action.setLabel(label);
 				actions.add(action);
 			}
@@ -86,11 +91,16 @@ public class MetaService {
 		for (Method method : actionClass[0].getMethods()) {
 			if (Modifier.isStatic(method.getModifiers()) && method.isAnnotationPresent(RamailoAction.class)) {
 				RamailoAction annotation = method.getAnnotation(RamailoAction.class);
+				
 				String label = annotation.label();
 				label = label.isEmpty() ? StringUtility.labelize(method.getName()) : label;
+				
+				String pathName = annotation.pathName();
+				pathName = pathName.isEmpty() ? method.getName() : pathName;
 
 				Action action = new Action();
 				action.setName(method.getName());
+				action.setPathName(pathName);
 				action.setLabel(label);
 				actions.add(action);
 			}
