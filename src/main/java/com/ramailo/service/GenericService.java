@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -118,7 +119,7 @@ public class GenericService {
 				return action;
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 		}
 
@@ -238,7 +239,7 @@ public class GenericService {
 		Object entity = this.findById(request);
 		if (entity == null)
 			throw new ResourceNotFoundException();
-		
+
 		BaseActions<?> actionImplObject = baseActions(entity);
 		Method method = findMethodinClass(actionImplObject.getClass(), action.getName());
 
@@ -262,15 +263,6 @@ public class GenericService {
 		}
 	}
 
-	private QueryParam findParam(List<QueryParam> params, String paramName) {
-		for (QueryParam qp : params) {
-			if (qp.getKey().equals(paramName)) {
-				return qp;
-			}
-		}
-		return null;
-	}
-
 	private Object newInstanceWithId(Class clazz, String id) throws InstantiationException, IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, SecurityException {
 		Object obj = clazz.getConstructors()[0].newInstance();
@@ -287,13 +279,14 @@ public class GenericService {
 
 		for (Parameter parameter : method.getParameters()) {
 			RamailoArg arg = parameter.getAnnotation(RamailoArg.class);
-			QueryParam paramValue = findParam(queryParams, arg.name());
-			if (paramValue != null) {
+			Optional<QueryParam> paramValue = queryParams.stream().filter(qp -> qp.getKey().equals(arg.name()))
+					.findFirst();
+			if (paramValue.isPresent()) {
 				Object castedValue = null;
 				try {
-					castedValue = TypeCaster.cast(paramValue.getValue().toString(), parameter.getType());
+					castedValue = TypeCaster.cast(paramValue.get().getValue().toString(), parameter.getType());
 				} catch (ClassCastException e) {
-					castedValue = newInstanceWithId(parameter.getType(), paramValue.getValue().toString());
+					castedValue = newInstanceWithId(parameter.getType(), paramValue.get().getValue().toString());
 				}
 				arguments.add(castedValue);
 			}

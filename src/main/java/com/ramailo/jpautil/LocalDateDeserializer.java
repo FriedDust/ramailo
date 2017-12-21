@@ -26,7 +26,6 @@ public class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
 			try {
 				return LocalDate.parse(jp.getValueAsString(), DATETIME_FORMAT);
 			} catch (DateTimeParseException e) {
-				e.printStackTrace();
 				return null;
 			}
 		}

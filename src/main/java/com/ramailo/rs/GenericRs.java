@@ -39,15 +39,11 @@ public class GenericRs {
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response getAction() {
-		try {
-			RequestInfo requestInfo = requestParser.parse(uriInfo, "GET");
-			Object result = genericMiddleware.processGetAction(requestInfo);
+	public Response getAction() throws Exception {
+		RequestInfo requestInfo = requestParser.parse(uriInfo, "GET");
+		Object result = genericMiddleware.processGetAction(requestInfo);
 
-			return Response.ok().entity(result).build();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		return Response.ok().entity(result).build();
 	}
 
 	@POST
