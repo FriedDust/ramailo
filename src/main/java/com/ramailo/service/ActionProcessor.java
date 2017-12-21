@@ -24,7 +24,7 @@ public class ActionProcessor {
 
 		if (request.getSecondPathParam() != null) {
 			Optional<Action> action = request.getResource().getActions().stream()
-					.filter(act -> !act.isStaticMethod() && act.getMethodType().equals(act.getMethodType())
+					.filter(act -> !act.isStaticMethod() && act.getMethodType().equals(request.getMethodType())
 							&& act.getPathName().equals(request.getSecondPathParam()))
 					.findFirst();
 

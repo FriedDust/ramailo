@@ -45,13 +45,24 @@ public class GenericMiddleware {
 		return result;
 	}
 
-	public Object processPutAction(RequestInfo requestInfo, JsonObject body) throws Exception {
-		Object result = genericService.update(requestInfo, body);
+	public Object processPutAction(RequestInfo request, JsonObject body) throws Exception {
+		Optional<Action> action = actionProcessor.findAction(request);
+		if (action.isPresent()) {
+			return genericService.invokeAction(request, action.get(), body);
+		}
+
+		Object result = genericService.update(request, body);
 
 		return result;
 	}
 
-	public void processDeleteAction(RequestInfo requestInfo) throws Exception {
-		genericService.remove(requestInfo);
+	public void processDeleteAction(RequestInfo request) throws Exception {
+		Optional<Action> action = actionProcessor.findAction(request);
+		if (action.isPresent()) {
+			genericService.invokeAction(request, action.get(), null);
+			return;
+		}
+
+		genericService.remove(request);
 	}
 }

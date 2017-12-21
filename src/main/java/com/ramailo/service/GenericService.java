@@ -216,12 +216,19 @@ public class GenericService {
 		return method.invoke(actionObject, args);
 	}
 
-	private Object invokeStaticAction(RequestInfo request, Action action) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException {
+	private Object invokeStaticAction(RequestInfo request, Action action, JsonObject data)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
+			SecurityException, JsonParseException, JsonMappingException, ClassCastException, IOException {
 		Class actionImplClass = request.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
 		Method method = findMethodinClass(actionImplClass, action.getName());
 
-		Object arguments[] = buildArgumentsForAction(actionImplClass, action, request.getQueryParams());
+		Object arguments[] = new Object[0];
+
+		if (action.getMethodType().equals("GET") || action.getMethodType().equals("DELETE"))
+			arguments = buildArgumentsForAction(actionImplClass, action, request.getQueryParams());
+		else
+			arguments = buildArgumentsForAction(actionImplClass, action, data);
+
 		return invokeMethod(null, method, arguments);
 	}
 
@@ -229,12 +236,15 @@ public class GenericService {
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
 			SecurityException, JsonParseException, JsonMappingException, ClassCastException, IOException {
 		Object entity = this.findById(request);
+		if (entity == null)
+			throw new ResourceNotFoundException();
+		
 		BaseActions<?> actionImplObject = baseActions(entity);
 		Method method = findMethodinClass(actionImplObject.getClass(), action.getName());
 
 		Object arguments[] = new Object[0];
-		
-		if (action.getMethodType().equals("GET"))
+
+		if (action.getMethodType().equals("GET") || action.getMethodType().equals("DELETE"))
 			arguments = buildArgumentsForAction(actionImplObject.getClass(), action, request.getQueryParams());
 		else {
 			arguments = buildArgumentsForAction(actionImplObject.getClass(), action, data);
@@ -242,11 +252,11 @@ public class GenericService {
 		return invokeMethod(actionImplObject, method, arguments);
 	}
 
-	public Object invokeAction(RequestInfo request, Action action, JsonObject body) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException,
-			JsonParseException, JsonMappingException, ClassCastException, IOException {
+	public Object invokeAction(RequestInfo request, Action action, JsonObject body)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
+			SecurityException, JsonParseException, JsonMappingException, ClassCastException, IOException {
 		if (action.isStaticMethod()) {
-			return invokeStaticAction(request, action);
+			return invokeStaticAction(request, action, body);
 		} else {
 			return invokeNonStaticAction(request, action, body);
 		}
