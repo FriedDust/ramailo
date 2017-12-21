@@ -3,15 +3,36 @@ package com.ramailo;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ramailo.meta.Resource;
+import com.ramailo.util.QueryParamUtility.QueryParam;
+
 /**
  * 
  * @author Kailash Bijayananda <fried.dust@gmail.com>
  *
  */
-public class ResourceMeta {
-	private String resource;
+public class RequestInfo {
+	private Resource resource;
 	private Class<?> entityClass;
+	private String methodType;
 	private List<String> pathParams = new ArrayList<>();
+	private List<QueryParam> queryParams = new ArrayList<>();
+
+	public String getMethodType() {
+		return methodType;
+	}
+
+	public void setMethodType(String methodType) {
+		this.methodType = methodType;
+	}
+
+	public List<QueryParam> getQueryParams() {
+		return queryParams;
+	}
+
+	public void setQueryParams(List<QueryParam> queryParams) {
+		this.queryParams = queryParams;
+	}
 
 	public List<String> getPathParams() {
 		return pathParams;
@@ -29,11 +50,11 @@ public class ResourceMeta {
 		this.entityClass = entityClass;
 	}
 
-	public String getResource() {
+	public Resource getResource() {
 		return resource;
 	}
 
-	public void setResource(String resource) {
+	public void setResource(Resource resource) {
 		this.resource = resource;
 	}
 

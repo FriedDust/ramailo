@@ -100,6 +100,7 @@ public class MetaService {
 				action.setMethodType(annotation.methodType());
 				action.setLabel(label);
 				action.setArguments(readArguments(method));
+				action.setStaticMethod(false);
 				actions.add(action);
 			}
 		}
@@ -129,6 +130,7 @@ public class MetaService {
 				action.setMethodType(annotation.methodType());
 				action.setLabel(label);
 				action.setArguments(readArguments(method));
+				action.setStaticMethod(true);
 				actions.add(action);
 			}
 		}

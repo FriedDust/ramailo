@@ -1,8 +1,5 @@
 package com.ramailo.rs;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
@@ -14,18 +11,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import com.ramailo.PathParser;
-import com.ramailo.ResourceMeta;
-import com.ramailo.meta.Action;
-import com.ramailo.meta.Resource;
-import com.ramailo.service.GenericService;
-import com.ramailo.service.MetaService;
-import com.ramailo.util.QueryParamUtility;
-import com.ramailo.util.QueryParamUtility.QueryParam;
+import com.ramailo.RequestInfo;
+import com.ramailo.RequestParser;
+import com.ramailo.service.GenericMiddleware;
 
 /**
  * 
@@ -39,10 +30,10 @@ public class GenericRs {
 	private UriInfo uriInfo;
 
 	@Inject
-	private PathParser pathParser;
+	private RequestParser requestParser;
 
 	@Inject
-	private GenericService genericService;
+	private GenericMiddleware genericMiddleware;
 
 	@GET
 	@Path("/{resource:.*}")
@@ -50,50 +41,8 @@ public class GenericRs {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response getAction() {
 		try {
-			List<QueryParam> queryParams = QueryParamUtility
-					.convert((MultivaluedMap<String, String>) uriInfo.getQueryParameters());
-			ResourceMeta resourceMeta = pathParser.parse(uriInfo);
-			MetaService metaService = new MetaService(resourceMeta.getEntityClass());
-			Resource resource = metaService.read();
-			Action staticAction = null;
-			Action action = null;
-
-			if (resourceMeta.getFirstPathParam() != null) {
-				List<Action> matches = resource.getStaticActions().stream()
-						.filter(act -> act.getPathName().equals(resourceMeta.getFirstPathParam()))
-						.collect(Collectors.toList());
-
-				if (matches.size() > 0) {
-					staticAction = matches.get(0);
-				}
-			}
-			if (resourceMeta.getSecondPathParam() != null) {
-				List<Action> matches = resource.getActions().stream()
-						.filter(act -> act.getPathName().equals(resourceMeta.getSecondPathParam()))
-						.collect(Collectors.toList());
-
-				if (matches.size() > 0) {
-					action = matches.get(0);
-				}
-			}
-
-			if (staticAction != null) {
-				Object result = genericService.invokeStaticAction(resourceMeta, staticAction, queryParams);
-				return Response.ok().entity(result).build();
-			}
-
-			if (action != null) {
-				Object result = genericService.invokeAction(resourceMeta, action, queryParams);
-				return Response.ok().entity(result).build();
-			}
-
-			if (resourceMeta.getFirstPathParam() != null) {
-				Object result = genericService.findById(resourceMeta);
-				return Response.ok().entity(result).build();
-			}
-
-			List<?> result = genericService.find(resourceMeta,
-					QueryParamUtility.convert((MultivaluedMap<String, String>) uriInfo.getQueryParameters()));
+			RequestInfo requestInfo = requestParser.parse(uriInfo, "GET");
+			Object result = genericMiddleware.processGetAction(requestInfo);
 
 			return Response.ok().entity(result).build();
 		} catch (Exception e) {
@@ -105,31 +54,43 @@ public class GenericRs {
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response postAction(JsonObject object) {
-		ResourceMeta resource = pathParser.parse(uriInfo);
-		Object result = genericService.create(resource, object);
+	public Response postAction(JsonObject body) {
+		try {
+			RequestInfo requestInfo = requestParser.parse(uriInfo, "POST");
+			Object result = genericMiddleware.processPostAction(requestInfo, body);
 
-		return Response.ok().entity(result).build();
+			return Response.ok().entity(result).build();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@PUT
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response putAction(JsonObject object) {
-		ResourceMeta resource = pathParser.parse(uriInfo);
-		Object result = genericService.update(resource, object);
+	public Response putAction(JsonObject body) {
+		try {
+			RequestInfo requestInfo = requestParser.parse(uriInfo, "PUT");
+			Object result = genericMiddleware.processPutAction(requestInfo, body);
 
-		return Response.ok().entity(result).build();
+			return Response.ok().entity(result).build();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@DELETE
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response deleteAction() {
-		ResourceMeta resource = pathParser.parse(uriInfo);
-		genericService.remove(resource);
+		try {
+			RequestInfo requestInfo = requestParser.parse(uriInfo, "DELETE");
+			genericMiddleware.processDeleteAction(requestInfo);
 
-		return Response.ok().build();
+			return Response.ok().build();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

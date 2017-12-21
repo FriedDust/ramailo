@@ -24,7 +24,7 @@ import javax.persistence.criteria.Root;
 import org.apache.commons.beanutils.BeanUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ramailo.ResourceMeta;
+import com.ramailo.RequestInfo;
 import com.ramailo.annotation.RamailoArg;
 import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
@@ -45,18 +45,18 @@ public class GenericService {
 	@Inject
 	private EntityManager em;
 
-	public List<?> find(ResourceMeta resource, List<QueryParam> params) {
+	public List<?> find(RequestInfo request) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
-		CriteriaQuery cquery = cb.createQuery(resource.getEntityClass());
+		CriteriaQuery cquery = cb.createQuery(request.getEntityClass());
 		//
-		Root<?> root = cquery.from(resource.getEntityClass());
+		Root<?> root = cquery.from(request.getEntityClass());
 		cquery.select(root);
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		for (QueryParam param : params) {
+		for (QueryParam param : request.getQueryParams()) {
 			try {
-				Field field = resource.getEntityClass().getDeclaredField(param.getKey());
+				Field field = request.getEntityClass().getDeclaredField(param.getKey());
 
 				if (field.isAnnotationPresent(ManyToOne.class)) {
 					Class<?> fieldType = field.getType();
@@ -87,7 +87,7 @@ public class GenericService {
 
 		cquery.where(predicates.toArray(new Predicate[0]));
 
-		Field autoPkField = PkUtility.findAutoPkField(resource.getEntityClass());
+		Field autoPkField = PkUtility.findAutoPkField(request.getEntityClass());
 		if (autoPkField != null) {
 			cquery.orderBy(cb.desc(root.get(autoPkField.getName())));
 		}
@@ -96,9 +96,9 @@ public class GenericService {
 		return tquery.getResultList();
 	}
 
-	public Object findById(ResourceMeta resource) {
-		Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getFirstPathParam());
-		Object result = em.find(resource.getEntityClass(), id);
+	public Object findById(RequestInfo request) {
+		Object id = PkUtility.castToPkType(request.getEntityClass(), request.getFirstPathParam());
+		Object result = em.find(request.getEntityClass(), id);
 
 		return result;
 	}
@@ -145,7 +145,7 @@ public class GenericService {
 			action.onDelete();
 	}
 
-	public Object create(ResourceMeta resource, JsonObject object) {
+	public Object create(RequestInfo resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
@@ -162,7 +162,7 @@ public class GenericService {
 		}
 	}
 
-	public Object update(ResourceMeta resource, JsonObject object) {
+	public Object update(RequestInfo resource, JsonObject object) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			Object idFromUrl = PkUtility.castToPkType(resource.getEntityClass(), resource.getFirstPathParam());
@@ -187,7 +187,7 @@ public class GenericService {
 		}
 	}
 
-	public void remove(ResourceMeta resource) {
+	public void remove(RequestInfo resource) {
 		Object id = PkUtility.castToPkType(resource.getEntityClass(), resource.getFirstPathParam());
 		Object existing = em.find(resource.getEntityClass(), id);
 		if (existing == null)
@@ -212,25 +212,32 @@ public class GenericService {
 		return method.invoke(actionObject, args);
 	}
 
-	public Object invokeStaticAction(ResourceMeta resourceMeta, Action action, List<QueryParam> queryParams)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
-			SecurityException {
-		Class actionClass = resourceMeta.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
+	private Object invokeStaticAction(RequestInfo request, Action action) throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException {
+		Class actionClass = request.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
 		Method method = findMethodinClass(actionClass, action.getName());
 
-		Object arguments[] = buildArgumentsForAction(actionClass, action, queryParams);
+		Object arguments[] = buildArgumentsForAction(actionClass, action, request.getQueryParams());
 		return invokeMethod(null, method, arguments);
 	}
 
-	public Object invokeAction(ResourceMeta resourceMeta, Action action, List<QueryParam> queryParams)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
-			SecurityException {
-		Object entity = this.findById(resourceMeta);
+	private Object invokeNonStaticAction(RequestInfo request, Action action) throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException {
+		Object entity = this.findById(request);
 		BaseActions<?> actionObject = baseActions(entity);
 		Method method = findMethodinClass(actionObject.getClass(), action.getName());
 
-		Object arguments[] = buildArgumentsForAction(actionObject.getClass(), action, queryParams);
+		Object arguments[] = buildArgumentsForAction(actionObject.getClass(), action, request.getQueryParams());
 		return invokeMethod(actionObject, method, arguments);
+	}
+
+	public Object invokeAction(RequestInfo request, Action action) throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException {
+		if (action.isStaticMethod()) {
+			return invokeStaticAction(request, action);
+		} else {
+			return invokeNonStaticAction(request, action);
+		}
 	}
 
 	private QueryParam findParam(List<QueryParam> params, String paramName) {

@@ -9,8 +9,17 @@ public class Action {
 	private String pathName;
 	private String methodType;
 	private String label;
+	private Boolean staticMethod;
 
 	private List<Argument> arguments = new ArrayList<>();
+	
+	public void setStaticMethod(Boolean staticMethod) {
+		this.staticMethod = staticMethod;
+	}
+	
+	public Boolean isStaticMethod() {
+		return staticMethod;
+	}
 
 	public List<Argument> getArguments() {
 		return arguments;
