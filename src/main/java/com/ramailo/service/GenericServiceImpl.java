@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,8 +27,6 @@ import javax.persistence.criteria.Root;
 
 import org.apache.commons.beanutils.BeanUtils;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramailo.RequestInfo;
 import com.ramailo.annotation.RamailoArg;
@@ -53,41 +52,50 @@ public class GenericServiceImpl {
 	public List<?> find(RequestInfo request) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery cquery = cb.createQuery(request.getEntityClass());
-		//
+
 		Root<?> root = cquery.from(request.getEntityClass());
 		cquery.select(root);
 
 		List<Predicate> predicates = new ArrayList<>();
 
 		for (QueryParam param : request.getQueryParams()) {
+			Field field = null;
 			try {
-				Field field = request.getEntityClass().getDeclaredField(param.getKey());
-
-				if (field.isAnnotationPresent(ManyToOne.class)) {
-					Class<?> fieldType = field.getType();
-					String stringifyField = fieldType.getAnnotation(RamailoResource.class).stringify();
-
-					Join<Object, Object> join = root.join(field.getName(), JoinType.LEFT);
-					predicates.add(cb.equal(join.get(stringifyField), param.getValue()));
-
-				} else {
-					if (param.getOperator().equals("eq")) {
-						predicates.add(cb.equal(root.get(field.getName()), param.getValue()));
-					} else if (param.getOperator().equals("lt")) {
-						predicates.add(cb.lessThan(root.get(field.getName()), param.getValue().toString()));
-					} else if (param.getOperator().equals("lte")) {
-						predicates.add(cb.lessThanOrEqualTo(root.get(field.getName()), param.getValue().toString()));
-					} else if (param.getOperator().equals("gt")) {
-						predicates.add(cb.greaterThan(root.get(field.getName()), param.getValue().toString()));
-					} else if (param.getOperator().equals("gte")) {
-						predicates.add(cb.greaterThanOrEqualTo(root.get(field.getName()), param.getValue().toString()));
-					} else if (param.getOperator().equals("like")) {
-						predicates.add(cb.like(root.get(field.getName()), param.getValue() + "%"));
-					}
-				}
+				field = request.getEntityClass().getDeclaredField(param.getKey());
 			} catch (NoSuchFieldException | SecurityException e) {
-				e.printStackTrace();
+				continue;
 			}
+			String fieldName = field.getName();
+			String value = param.getValue().toString();
+			String operator = param.getOperator();
+
+			if (field.isAnnotationPresent(ManyToOne.class)) {
+				Class<?> fieldType = field.getType();
+				String stringifyField = fieldType.getAnnotation(RamailoResource.class).stringify();
+
+				Join<Object, Object> join = root.join(field.getName(), JoinType.LEFT);
+				predicates.add(cb.equal(join.get(stringifyField), value));
+
+			} else {
+				Predicate predicate = null;
+				if (operator.equals("eq")) {
+					predicate = cb.equal(root.get(fieldName), value);
+				} else if (operator.equals("lt")) {
+					predicate = cb.lessThan(root.get(fieldName), value);
+				} else if (operator.equals("lte")) {
+					predicate = cb.lessThanOrEqualTo(root.get(fieldName), value);
+				} else if (operator.equals("gt")) {
+					predicate = cb.greaterThan(root.get(fieldName), value);
+				} else if (operator.equals("gte")) {
+					predicate = cb.greaterThanOrEqualTo(root.get(fieldName), value);
+				} else if (operator.equals("like")) {
+					predicate = cb.like(root.get(fieldName), value + "%");
+				}
+
+				if (predicate != null)
+					predicates.add(predicate);
+			}
+
 		}
 
 		cquery.where(predicates.toArray(new Predicate[0]));
@@ -105,91 +113,95 @@ public class GenericServiceImpl {
 		Object id = PkUtility.castToPkType(request.getEntityClass(), request.getFirstPathParam());
 		Object result = em.find(request.getEntityClass(), id);
 
+		if (result == null)
+			throw new ResourceNotFoundException();
+
 		return result;
 	}
 
 	private BaseActions<?> baseActions(Object entity) {
-		for (Class actionClass : entity.getClass().getAnnotation(RamailoResource.class).actions()) {
-			try {
-				BaseActions<?> action = (BaseActions<?>) actionClass.getConstructor(entity.getClass())
-						.newInstance(entity);
+		try {
+			Class actionClass = entity.getClass().getAnnotation(RamailoResource.class).actions()[0];
+			BaseActions<?> action = (BaseActions<?>) actionClass.getConstructor(entity.getClass()).newInstance(entity);
 
-				BeanUtils.setProperty(action, "em", em);
+			BeanUtils.setProperty(action, "em", em);
 
-				return action;
-			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-				//e.printStackTrace();
-			}
+			return action;
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new RuntimeException("No base action class");
 		}
-
-		return null;
 	}
 
 	private void onBeforeSave(Object entity) {
 		BaseActions<?> action = baseActions(entity);
-		if (action != null)
-			action.onBeforeSave();
+		action.onBeforeSave();
 	}
 
 	private void onSave(Object entity) {
 		BaseActions<?> action = baseActions(entity);
-		if (action != null)
-			action.onSave();
+		action.onSave();
 	}
 
 	private void onBeforeDelete(Object entity) {
 		BaseActions<?> action = baseActions(entity);
-		if (action != null)
-			action.onBeforeDelete();
+		action.onBeforeDelete();
 	}
 
 	private void onDelete(Object entity) {
 		BaseActions<?> action = baseActions(entity);
-		if (action != null)
-			action.onDelete();
+		action.onDelete();
 	}
 
 	public Object create(RequestInfo resource, JsonObject object) {
-		ObjectMapper mapper = new ObjectMapper();
+		Object entity;
 		try {
-			Object entity = mapper.readValue(object.toString(), resource.getEntityClass());
+			ObjectMapper mapper = new ObjectMapper();
+			entity = mapper.readValue(object.toString(), resource.getEntityClass());
 
-			onBeforeSave(entity);
-			em.persist(entity);
-			em.flush();
-			em.refresh(entity);
-			onSave(entity);
-
-			return entity;
 		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException("Cannot convert body to " + resource.getEntityClass());
 		}
+
+		onBeforeSave(entity);
+		em.persist(entity);
+		em.flush();
+		em.refresh(entity);
+		onSave(entity);
+
+		return entity;
+
 	}
 
 	public Object update(RequestInfo resource, JsonObject object) {
-		ObjectMapper mapper = new ObjectMapper();
+		Object source;
 		try {
-			Object idFromUrl = PkUtility.castToPkType(resource.getEntityClass(), resource.getFirstPathParam());
-			Object source = mapper.readValue(object.toString(), resource.getEntityClass());
-			Object existing = em.find(resource.getEntityClass(), idFromUrl);
-			if (existing == null)
-				throw new ResourceNotFoundException();
-
-			AttributeUtility.copyAttributes(existing, source);
-
-			onBeforeSave(existing);
-			em.merge(existing);
-			em.flush();
-			em.refresh(existing);
-			onSave(existing);
-
-			return existing;
-		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-			throw new RuntimeException(e.getMessage());
+			ObjectMapper mapper = new ObjectMapper();
+			source = mapper.readValue(object.toString(), resource.getEntityClass());
 		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage());
+			throw new RuntimeException("Cannot convert body to " + resource.getEntityClass());
 		}
+
+		Object idFromUrl = PkUtility.castToPkType(resource.getEntityClass(), resource.getFirstPathParam());
+
+		Object existing = em.find(resource.getEntityClass(), idFromUrl);
+		if (existing == null)
+			throw new ResourceNotFoundException();
+
+		try {
+			AttributeUtility.copyAttributes(existing, source);
+		} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+			throw new RuntimeException("Cannot merge attributes to the existing object.");
+		}
+
+		onBeforeSave(existing);
+		em.merge(existing);
+		em.flush();
+		em.refresh(existing);
+		onSave(existing);
+
+		return existing;
+
 	}
 
 	public void remove(RequestInfo resource) {
@@ -204,24 +216,18 @@ public class GenericServiceImpl {
 		onDelete(existing);
 	}
 
-	private Method findMethodinClass(Class clazz, String methodName) {
-		for (Method method : clazz.getMethods()) {
-			if (method.getName().equals(methodName))
-				return method;
+	private Object invokeMethod(Object actionObject, Method method, Object... args) {
+		try {
+			return method.invoke(actionObject, args);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			throw new RuntimeException("Cannot invoke method: " + method.getName());
 		}
-		return null;
 	}
 
-	private Object invokeMethod(Object actionObject, Method method, Object... args)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		return method.invoke(actionObject, args);
-	}
-
-	private Object invokeStaticAction(RequestInfo request, Action action, JsonObject data)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
-			SecurityException, JsonParseException, JsonMappingException, ClassCastException, IOException {
+	private Object invokeStaticAction(RequestInfo request, Action action, JsonObject data) {
 		Class actionImplClass = request.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
-		Method method = findMethodinClass(actionImplClass, action.getName());
+		Optional<Method> method = Arrays.stream(actionImplClass.getMethods())
+				.filter(m -> m.getName().equals(action.getName())).findFirst();
 
 		Object arguments[] = new Object[0];
 
@@ -230,18 +236,17 @@ public class GenericServiceImpl {
 		else
 			arguments = buildArgumentsForAction(actionImplClass, action, data);
 
-		return invokeMethod(null, method, arguments);
+		return invokeMethod(null, method.get(), arguments);
 	}
 
-	private Object invokeNonStaticAction(RequestInfo request, Action action, JsonObject data)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
-			SecurityException, JsonParseException, JsonMappingException, ClassCastException, IOException {
+	private Object invokeNonStaticAction(RequestInfo request, Action action, JsonObject data) {
 		Object entity = this.findById(request);
 		if (entity == null)
 			throw new ResourceNotFoundException();
 
 		BaseActions<?> actionImplObject = baseActions(entity);
-		Method method = findMethodinClass(actionImplObject.getClass(), action.getName());
+		Optional<Method> method = Arrays.stream(actionImplObject.getClass().getMethods())
+				.filter(m -> m.getName().equals(action.getName())).findFirst();
 
 		Object arguments[] = new Object[0];
 
@@ -250,12 +255,10 @@ public class GenericServiceImpl {
 		else {
 			arguments = buildArgumentsForAction(actionImplObject.getClass(), action, data);
 		}
-		return invokeMethod(actionImplObject, method, arguments);
+		return invokeMethod(actionImplObject, method.get(), arguments);
 	}
 
-	public Object invokeAction(RequestInfo request, Action action, JsonObject body)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
-			SecurityException, JsonParseException, JsonMappingException, ClassCastException, IOException {
+	public Object invokeAction(RequestInfo request, Action action, JsonObject body) {
 		if (action.isStaticMethod()) {
 			return invokeStaticAction(request, action, body);
 		} else {
@@ -263,21 +266,25 @@ public class GenericServiceImpl {
 		}
 	}
 
-	private Object newInstanceWithId(Class clazz, String id) throws InstantiationException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, SecurityException {
-		Object obj = clazz.getConstructors()[0].newInstance();
-		BeanUtils.setProperty(obj, "id", id);
+	private Object newInstanceWithId(Class clazz, String id) {
+		try {
+			Object obj = clazz.getConstructors()[0].newInstance();
+			BeanUtils.setProperty(obj, "id", id);
 
-		return obj;
+			return obj;
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| SecurityException e) {
+			throw new RuntimeException("Cannot create instance of " + clazz.getName() + " and set ID");
+		}
+
 	}
 
-	private Object[] buildArgumentsForAction(Class<?> actionClass, Action action, List<QueryParam> queryParams)
-			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
-			SecurityException {
+	private Object[] buildArgumentsForAction(Class<?> actionClass, Action action, List<QueryParam> queryParams) {
 		List<Object> arguments = new ArrayList<>();
-		Method method = findMethodinClass(actionClass, action.getName());
+		Optional<Method> method = Arrays.stream(actionClass.getMethods())
+				.filter(m -> m.getName().equals(action.getName())).findFirst();
 
-		for (Parameter parameter : method.getParameters()) {
+		for (Parameter parameter : method.get().getParameters()) {
 			RamailoArg arg = parameter.getAnnotation(RamailoArg.class);
 			Optional<QueryParam> paramValue = queryParams.stream().filter(qp -> qp.getKey().equals(arg.name()))
 					.findFirst();
@@ -295,18 +302,22 @@ public class GenericServiceImpl {
 		return arguments.toArray();
 	}
 
-	private Object[] buildArgumentsForAction(Class<?> actionClass, Action action, JsonObject data)
-			throws ClassCastException, JsonParseException, JsonMappingException, IOException {
+	private Object[] buildArgumentsForAction(Class<?> actionClass, Action action, JsonObject data) {
 		List<Object> arguments = new ArrayList<>();
-		Method method = findMethodinClass(actionClass, action.getName());
+		Optional<Method> method = Arrays.stream(actionClass.getMethods())
+				.filter(m -> m.getName().equals(action.getName())).findFirst();
 
-		for (Parameter parameter : method.getParameters()) {
+		for (Parameter parameter : method.get().getParameters()) {
 			RamailoArg arg = parameter.getAnnotation(RamailoArg.class);
 			JsonValue value = data.get(arg.name());
 			if (value != null) {
 				Object castedValue = null;
 				if (value.getValueType().equals(ValueType.OBJECT)) {
-					castedValue = new ObjectMapper().readValue(value.toString(), parameter.getType());
+					try {
+						castedValue = new ObjectMapper().readValue(value.toString(), parameter.getType());
+					} catch (IOException e) {
+						throw new RuntimeException("Cannot convert value to " + parameter.getType());
+					}
 				} else {
 					castedValue = TypeCaster.cast(value.toString(), parameter.getType());
 				}

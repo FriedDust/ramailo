@@ -50,43 +50,31 @@ public class GenericRs {
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response postAction(JsonObject body) {
-		try {
-			RequestInfo requestInfo = requestParser.parse(uriInfo, "POST");
-			Object result = genericMiddleware.processPostAction(requestInfo, body);
+	public Response postAction(JsonObject body) throws Exception {
+		RequestInfo requestInfo = requestParser.parse(uriInfo, "POST");
+		Object result = genericMiddleware.processPostAction(requestInfo, body);
 
-			return Response.ok().entity(result).build();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		return Response.ok().entity(result).build();
 	}
 
 	@PUT
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response putAction(JsonObject body) {
-		try {
-			RequestInfo requestInfo = requestParser.parse(uriInfo, "PUT");
-			Object result = genericMiddleware.processPutAction(requestInfo, body);
+	public Response putAction(JsonObject body) throws Exception {
+		RequestInfo requestInfo = requestParser.parse(uriInfo, "PUT");
+		Object result = genericMiddleware.processPutAction(requestInfo, body);
 
-			return Response.ok().entity(result).build();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		return Response.ok().entity(result).build();
 	}
 
 	@DELETE
 	@Path("/{resource:.*}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deleteAction() {
-		try {
-			RequestInfo requestInfo = requestParser.parse(uriInfo, "DELETE");
-			genericMiddleware.processDeleteAction(requestInfo);
+	public Response deleteAction() throws Exception {
+		RequestInfo requestInfo = requestParser.parse(uriInfo, "DELETE");
+		genericMiddleware.processDeleteAction(requestInfo);
 
-			return Response.ok().build();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		return Response.ok().build();
 	}
 }

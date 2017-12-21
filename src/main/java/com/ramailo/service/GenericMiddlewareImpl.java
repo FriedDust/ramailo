@@ -24,15 +24,17 @@ public class GenericMiddlewareImpl {
 			return genericService.invokeAction(request, action.get(), null);
 		}
 
-		if (request.getFirstPathParam() != null && request.getPathParams().size() == 2) {
+		if (request.getPathParams().size() == 1) {
+			List<?> result = genericService.find(request);
+
+			return result;
+		} else if (request.getPathParams().size() == 2) {
 			Object result = genericService.findById(request);
 
 			return result;
 		}
 
-		List<?> result = genericService.find(request);
-
-		return result;
+		throw new ResourceNotFoundException();
 	}
 
 	public Object processPostAction(RequestInfo request, JsonObject body) throws Exception {
@@ -41,9 +43,13 @@ public class GenericMiddlewareImpl {
 			return genericService.invokeAction(request, action.get(), body);
 		}
 
-		Object result = genericService.create(request, body);
+		if (request.getPathParams().size() == 1) {
+			Object result = genericService.create(request, body);
 
-		return result;
+			return result;
+		}
+
+		throw new ResourceNotFoundException();
 	}
 
 	public Object processPutAction(RequestInfo request, JsonObject body) throws Exception {
@@ -52,9 +58,13 @@ public class GenericMiddlewareImpl {
 			return genericService.invokeAction(request, action.get(), body);
 		}
 
-		Object result = genericService.update(request, body);
+		if (request.getPathParams().size() == 2) {
+			Object result = genericService.update(request, body);
 
-		return result;
+			return result;
+		}
+		
+		throw new ResourceNotFoundException();
 	}
 
 	public void processDeleteAction(RequestInfo request) throws Exception {
@@ -63,6 +73,7 @@ public class GenericMiddlewareImpl {
 			genericService.invokeAction(request, action.get(), null);
 			return;
 		}
+		
 		if (request.getPathParams().size() == 2) {
 			genericService.remove(request);
 			return;
