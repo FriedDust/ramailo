@@ -20,8 +20,8 @@ public class TypeCaster {
 	 * @return an instance of given type
 	 * 
 	 * @exception ClassCastException
-	 *                if given type neither has a public static method valueOf
-	 *                nor has a constructor with single argument of String
+	 *                if given type neither has a public static method valueOf nor
+	 *                has a constructor with single argument of String
 	 */
 	public static <T> Object cast(String value, Class<T> type) {
 		if (value == null)
@@ -42,11 +42,9 @@ public class TypeCaster {
 			constructor = type.getConstructor(String.class);
 			return invoke(constructor, value);
 		} catch (NoSuchMethodException | SecurityException e) {
-			e.printStackTrace();
+			throw new ClassCastException(type.getName()
+					+ " neither has a public static method valueOf nor has a constructor with single argument of String");
 		}
-
-		throw new ClassCastException(type.getName()
-				+ " neither has a public static method valueOf nor has a constructor with single argument of String");
 	}
 
 	private static Object invoke(Method method, String value) {

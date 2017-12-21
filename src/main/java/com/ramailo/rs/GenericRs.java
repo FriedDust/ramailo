@@ -25,6 +25,7 @@ import com.ramailo.meta.Resource;
 import com.ramailo.service.GenericService;
 import com.ramailo.service.MetaService;
 import com.ramailo.util.QueryParamUtility;
+import com.ramailo.util.QueryParamUtility.QueryParam;
 
 /**
  * 
@@ -49,6 +50,8 @@ public class GenericRs {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response getAction() {
 		try {
+			List<QueryParam> queryParams = QueryParamUtility
+					.convert((MultivaluedMap<String, String>) uriInfo.getQueryParameters());
 			ResourceMeta resourceMeta = pathParser.parse(uriInfo);
 			MetaService metaService = new MetaService(resourceMeta.getEntityClass());
 			Resource resource = metaService.read();
@@ -75,12 +78,12 @@ public class GenericRs {
 			}
 
 			if (staticAction != null) {
-				Object result = genericService.invokeStaticAction(resourceMeta, staticAction);
+				Object result = genericService.invokeStaticAction(resourceMeta, staticAction, queryParams);
 				return Response.ok().entity(result).build();
 			}
 
 			if (action != null) {
-				Object result = genericService.invokeAction(resourceMeta, action);
+				Object result = genericService.invokeAction(resourceMeta, action, queryParams);
 				return Response.ok().entity(result).build();
 			}
 

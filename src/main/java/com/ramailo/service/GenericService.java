@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,14 +21,18 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.beanutils.BeanUtils;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramailo.ResourceMeta;
+import com.ramailo.annotation.RamailoArg;
 import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.meta.Action;
 import com.ramailo.util.AttributeUtility;
 import com.ramailo.util.PkUtility;
 import com.ramailo.util.QueryParamUtility.QueryParam;
+import com.ramailo.util.TypeCaster;
 
 /**
  * 
@@ -103,6 +108,8 @@ public class GenericService {
 			try {
 				BaseActions<?> action = (BaseActions<?>) actionClass.getConstructor(entity.getClass())
 						.newInstance(entity);
+
+				BeanUtils.setProperty(action, "em", em);
 
 				return action;
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
@@ -192,7 +199,7 @@ public class GenericService {
 		onDelete(existing);
 	}
 
-	private Method findActionMethod(Class clazz, String methodName) {
+	private Method findMethodinClass(Class clazz, String methodName) {
 		for (Method method : clazz.getMethods()) {
 			if (method.getName().equals(methodName))
 				return method;
@@ -205,20 +212,64 @@ public class GenericService {
 		return method.invoke(actionObject, args);
 	}
 
-	public Object invokeStaticAction(ResourceMeta resourceMeta, Action action)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public Object invokeStaticAction(ResourceMeta resourceMeta, Action action, List<QueryParam> queryParams)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
+			SecurityException {
 		Class actionClass = resourceMeta.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
-		Method method = findActionMethod(actionClass, action.getName());
+		Method method = findMethodinClass(actionClass, action.getName());
 
-		return invokeMethod(null, method, new Object[0]);
+		Object arguments[] = buildArgumentsForAction(actionClass, action, queryParams);
+		return invokeMethod(null, method, arguments);
 	}
 
-	public Object invokeAction(ResourceMeta resourceMeta, Action action)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public Object invokeAction(ResourceMeta resourceMeta, Action action, List<QueryParam> queryParams)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
+			SecurityException {
 		Object entity = this.findById(resourceMeta);
 		BaseActions<?> actionObject = baseActions(entity);
-		Method method = findActionMethod(actionObject.getClass(), action.getName());
+		Method method = findMethodinClass(actionObject.getClass(), action.getName());
 
-		return invokeMethod(actionObject, method, new Object[0]);
+		Object arguments[] = buildArgumentsForAction(actionObject.getClass(), action, queryParams);
+		return invokeMethod(actionObject, method, arguments);
+	}
+
+	private QueryParam findParam(List<QueryParam> params, String paramName) {
+		for (QueryParam qp : params) {
+			if (qp.getKey().equals(paramName)) {
+				return qp;
+			}
+		}
+		return null;
+	}
+
+	private Object newInstanceWithId(Class clazz, String id) throws InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, SecurityException {
+		Object obj = clazz.getConstructors()[0].newInstance();
+		BeanUtils.setProperty(obj, "id", id);
+
+		return obj;
+	}
+
+	private Object[] buildArgumentsForAction(Class<?> actionClass, Action action, List<QueryParam> queryParams)
+			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
+			SecurityException {
+		List<Object> arguments = new ArrayList<>();
+		Method method = findMethodinClass(actionClass, action.getName());
+
+		for (Parameter parameter : method.getParameters()) {
+			RamailoArg arg = parameter.getAnnotation(RamailoArg.class);
+			QueryParam paramValue = findParam(queryParams, arg.name());
+			if (arg.name().equals(paramValue.getKey())) {
+				Object castedValue = null;
+				try {
+					castedValue = TypeCaster.cast(paramValue.getValue(), parameter.getType());
+				} catch (ClassCastException e) {
+					castedValue = newInstanceWithId(parameter.getType(), paramValue.getValue());
+				}
+				arguments.add(castedValue);
+			}
+		}
+
+		return arguments.toArray();
 	}
 }
