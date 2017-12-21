@@ -35,7 +35,7 @@ public class ActionProcessor {
 	}
 
 	public Optional<Action> findAction(RequestInfo request) {
-		Optional<Action> action = findAction(request);
+		Optional<Action> action = findNonStaticAction(request);
 		if (action.isPresent())
 			return action;
 

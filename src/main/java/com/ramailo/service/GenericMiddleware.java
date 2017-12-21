@@ -13,20 +13,19 @@ public class GenericMiddleware {
 
 	@Inject
 	private GenericService genericService;
-	
+
 	@Inject
 	private ActionProcessor actionProcessor;
 
 	public Object processGetAction(RequestInfo request) throws Exception {
-
 		Optional<Action> action = actionProcessor.findAction(request);
 		if (action.isPresent()) {
-			return genericService.invokeAction(request, action.get());
+			return genericService.invokeAction(request, action.get(), null);
 		}
 
 		if (request.getFirstPathParam() != null) {
 			Object result = genericService.findById(request);
-			
+
 			return result;
 		}
 
@@ -35,8 +34,13 @@ public class GenericMiddleware {
 		return result;
 	}
 
-	public Object processPostAction(RequestInfo requestInfo, JsonObject body) throws Exception {
-		Object result = genericService.create(requestInfo, body);
+	public Object processPostAction(RequestInfo request, JsonObject body) throws Exception {
+		Optional<Action> action = actionProcessor.findAction(request);
+		if (action.isPresent()) {
+			return genericService.invokeAction(request, action.get(), body);
+		}
+
+		Object result = genericService.create(request, body);
 
 		return result;
 	}

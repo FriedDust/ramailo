@@ -11,6 +11,8 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 import javax.persistence.EntityManager;
 import javax.persistence.ManyToOne;
 import javax.persistence.TypedQuery;
@@ -23,6 +25,8 @@ import javax.persistence.criteria.Root;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramailo.RequestInfo;
 import com.ramailo.annotation.RamailoArg;
@@ -69,13 +73,13 @@ public class GenericService {
 					if (param.getOperator().equals("eq")) {
 						predicates.add(cb.equal(root.get(field.getName()), param.getValue()));
 					} else if (param.getOperator().equals("lt")) {
-						predicates.add(cb.lessThan(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.lessThan(root.get(field.getName()), param.getValue().toString()));
 					} else if (param.getOperator().equals("lte")) {
-						predicates.add(cb.lessThanOrEqualTo(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.lessThanOrEqualTo(root.get(field.getName()), param.getValue().toString()));
 					} else if (param.getOperator().equals("gt")) {
-						predicates.add(cb.greaterThan(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.greaterThan(root.get(field.getName()), param.getValue().toString()));
 					} else if (param.getOperator().equals("gte")) {
-						predicates.add(cb.greaterThanOrEqualTo(root.get(field.getName()), param.getValue()));
+						predicates.add(cb.greaterThanOrEqualTo(root.get(field.getName()), param.getValue().toString()));
 					} else if (param.getOperator().equals("like")) {
 						predicates.add(cb.like(root.get(field.getName()), param.getValue() + "%"));
 					}
@@ -214,29 +218,37 @@ public class GenericService {
 
 	private Object invokeStaticAction(RequestInfo request, Action action) throws IllegalAccessException,
 			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException {
-		Class actionClass = request.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
-		Method method = findMethodinClass(actionClass, action.getName());
+		Class actionImplClass = request.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
+		Method method = findMethodinClass(actionImplClass, action.getName());
 
-		Object arguments[] = buildArgumentsForAction(actionClass, action, request.getQueryParams());
+		Object arguments[] = buildArgumentsForAction(actionImplClass, action, request.getQueryParams());
 		return invokeMethod(null, method, arguments);
 	}
 
-	private Object invokeNonStaticAction(RequestInfo request, Action action) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException {
+	private Object invokeNonStaticAction(RequestInfo request, Action action, JsonObject data)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException,
+			SecurityException, JsonParseException, JsonMappingException, ClassCastException, IOException {
 		Object entity = this.findById(request);
-		BaseActions<?> actionObject = baseActions(entity);
-		Method method = findMethodinClass(actionObject.getClass(), action.getName());
+		BaseActions<?> actionImplObject = baseActions(entity);
+		Method method = findMethodinClass(actionImplObject.getClass(), action.getName());
 
-		Object arguments[] = buildArgumentsForAction(actionObject.getClass(), action, request.getQueryParams());
-		return invokeMethod(actionObject, method, arguments);
+		Object arguments[] = new Object[0];
+		
+		if (action.getMethodType().equals("GET"))
+			arguments = buildArgumentsForAction(actionImplObject.getClass(), action, request.getQueryParams());
+		else {
+			arguments = buildArgumentsForAction(actionImplObject.getClass(), action, data);
+		}
+		return invokeMethod(actionImplObject, method, arguments);
 	}
 
-	public Object invokeAction(RequestInfo request, Action action) throws IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException {
+	public Object invokeAction(RequestInfo request, Action action, JsonObject body) throws IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, InstantiationException, SecurityException,
+			JsonParseException, JsonMappingException, ClassCastException, IOException {
 		if (action.isStaticMethod()) {
 			return invokeStaticAction(request, action);
 		} else {
-			return invokeNonStaticAction(request, action);
+			return invokeNonStaticAction(request, action, body);
 		}
 	}
 
@@ -266,12 +278,34 @@ public class GenericService {
 		for (Parameter parameter : method.getParameters()) {
 			RamailoArg arg = parameter.getAnnotation(RamailoArg.class);
 			QueryParam paramValue = findParam(queryParams, arg.name());
-			if (arg.name().equals(paramValue.getKey())) {
+			if (paramValue != null) {
 				Object castedValue = null;
 				try {
-					castedValue = TypeCaster.cast(paramValue.getValue(), parameter.getType());
+					castedValue = TypeCaster.cast(paramValue.getValue().toString(), parameter.getType());
 				} catch (ClassCastException e) {
-					castedValue = newInstanceWithId(parameter.getType(), paramValue.getValue());
+					castedValue = newInstanceWithId(parameter.getType(), paramValue.getValue().toString());
+				}
+				arguments.add(castedValue);
+			}
+		}
+
+		return arguments.toArray();
+	}
+
+	private Object[] buildArgumentsForAction(Class<?> actionClass, Action action, JsonObject data)
+			throws ClassCastException, JsonParseException, JsonMappingException, IOException {
+		List<Object> arguments = new ArrayList<>();
+		Method method = findMethodinClass(actionClass, action.getName());
+
+		for (Parameter parameter : method.getParameters()) {
+			RamailoArg arg = parameter.getAnnotation(RamailoArg.class);
+			JsonValue value = data.get(arg.name());
+			if (value != null) {
+				Object castedValue = null;
+				if (value.getValueType().equals(ValueType.OBJECT)) {
+					castedValue = new ObjectMapper().readValue(value.toString(), parameter.getType());
+				} else {
+					castedValue = TypeCaster.cast(value.toString(), parameter.getType());
 				}
 				arguments.add(castedValue);
 			}
