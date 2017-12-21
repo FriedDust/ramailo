@@ -16,7 +16,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.ramailo.RequestInfo;
 import com.ramailo.RequestParser;
-import com.ramailo.service.GenericMiddleware;
+import com.ramailo.service.GenericMiddlewareImpl;
 
 /**
  * 
@@ -33,7 +33,7 @@ public class GenericRs {
 	private RequestParser requestParser;
 
 	@Inject
-	private GenericMiddleware genericMiddleware;
+	private GenericMiddlewareImpl genericMiddleware;
 
 	@GET
 	@Path("/{resource:.*}")

@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.ramailo.RequestInfo;
 import com.ramailo.meta.Action;
 
-public class ActionProcessor {
+public class ActionProcessorImpl {
 
 	public Optional<Action> findStaticAction(RequestInfo request) {
 

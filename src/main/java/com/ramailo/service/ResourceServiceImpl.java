@@ -15,7 +15,7 @@ import com.ramailo.util.ClassFinder;
  * @author Kailash Bijayananda <fried.dust@gmail.com>
  *
  */
-public class ResourceService {
+public class ResourceServiceImpl {
 
 	@Inject
 	private ClassFinder classFinder;
@@ -25,7 +25,7 @@ public class ResourceService {
 
 		Set<Class<?>> classes = findAll();
 		for (Class<?> cls : classes) {
-			MetaService metaService = new MetaService(cls);
+			MetaServiceImpl metaService = new MetaServiceImpl(cls);
 			Resource resource = metaService.read();
 
 			resources.add(resource);

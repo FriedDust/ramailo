@@ -8,8 +8,8 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
 import com.ramailo.meta.Resource;
-import com.ramailo.service.MetaService;
-import com.ramailo.service.ResourceService;
+import com.ramailo.service.MetaServiceImpl;
+import com.ramailo.service.ResourceServiceImpl;
 import com.ramailo.util.QueryParamUtility;
 
 /**
@@ -20,7 +20,7 @@ import com.ramailo.util.QueryParamUtility;
 public class RequestParser {
 
 	@Inject
-	private ResourceService resourceService;
+	private ResourceServiceImpl resourceService;
 
 	public RequestInfo parse(UriInfo uriInfo, String methodType) {
 		List<PathSegment> segments = uriInfo.getPathSegments();
@@ -38,7 +38,7 @@ public class RequestParser {
 			Class<?> entityClass = resourceService.findResourceEntity(resourceName);
 			requestInfo.setEntityClass(entityClass);
 
-			MetaService metaService = new MetaService(entityClass);
+			MetaServiceImpl metaService = new MetaServiceImpl(entityClass);
 			Resource resource = metaService.read();
 			requestInfo.setResource(resource);
 		}

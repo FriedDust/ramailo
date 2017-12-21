@@ -45,7 +45,7 @@ import com.ramailo.util.TypeCaster;
  *
  */
 @Stateless
-public class GenericService {
+public class GenericServiceImpl {
 
 	@Inject
 	private EntityManager em;

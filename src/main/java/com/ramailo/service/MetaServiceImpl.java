@@ -29,10 +29,10 @@ import com.ramailo.util.StringUtility;
  * @author Kailash Bijayananda <fried.dust@gmail.com>
  *
  */
-public class MetaService {
+public class MetaServiceImpl {
 	private Class<?> clazz;
 
-	public MetaService(Class<?> clazz) {
+	public MetaServiceImpl(Class<?> clazz) {
 		this.clazz = clazz;
 	}
 

@@ -10,7 +10,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.ramailo.meta.Resource;
-import com.ramailo.service.ResourceService;
+import com.ramailo.service.ResourceServiceImpl;
 
 /**
  * 
@@ -21,7 +21,7 @@ import com.ramailo.service.ResourceService;
 public class MetaRs {
 
 	@Inject
-	private ResourceService resourceService;
+	private ResourceServiceImpl resourceService;
 
 	@GET
 	@Path("/")

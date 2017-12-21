@@ -10,13 +10,13 @@ import com.ramailo.RequestInfo;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.meta.Action;
 
-public class GenericMiddleware {
+public class GenericMiddlewareImpl {
 
 	@Inject
-	private GenericService genericService;
+	private GenericServiceImpl genericService;
 
 	@Inject
-	private ActionProcessor actionProcessor;
+	private ActionProcessorImpl actionProcessor;
 
 	public Object processGetAction(RequestInfo request) throws Exception {
 		Optional<Action> action = actionProcessor.findAction(request);
