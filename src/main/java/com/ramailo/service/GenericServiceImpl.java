@@ -49,6 +49,38 @@ public class GenericServiceImpl {
 	@Inject
 	private EntityManager em;
 
+	private Predicate buildPredicate(Field field, CriteriaBuilder cb, Root<?> root, QueryParam param) {
+		String fieldName = field.getName();
+		String value = param.getValue().toString();
+		String operator = param.getOperator();
+
+		if (field.isAnnotationPresent(ManyToOne.class)) {
+			Class<?> fieldType = field.getType();
+			String stringifyField = fieldType.getAnnotation(RamailoResource.class).stringify();
+
+			Join<Object, Object> join = root.join(field.getName(), JoinType.LEFT);
+			return cb.equal(join.get(stringifyField), value);
+
+		} else {
+			Predicate predicate = null;
+			if (operator.equals("eq")) {
+				predicate = cb.equal(root.get(fieldName), value);
+			} else if (operator.equals("lt")) {
+				predicate = cb.lessThan(root.get(fieldName), value);
+			} else if (operator.equals("lte")) {
+				predicate = cb.lessThanOrEqualTo(root.get(fieldName), value);
+			} else if (operator.equals("gt")) {
+				predicate = cb.greaterThan(root.get(fieldName), value);
+			} else if (operator.equals("gte")) {
+				predicate = cb.greaterThanOrEqualTo(root.get(fieldName), value);
+			} else if (operator.equals("like")) {
+				predicate = cb.like(root.get(fieldName), value + "%");
+			}
+
+			return predicate;
+		}
+	}
+
 	public List<?> find(RequestInfo request) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery cquery = cb.createQuery(request.getEntityClass());
@@ -59,43 +91,15 @@ public class GenericServiceImpl {
 		List<Predicate> predicates = new ArrayList<>();
 
 		for (QueryParam param : request.getQueryParams()) {
-			Field field = null;
 			try {
-				field = request.getEntityClass().getDeclaredField(param.getKey());
-			} catch (NoSuchFieldException | SecurityException e) {
-				continue;
-			}
-			String fieldName = field.getName();
-			String value = param.getValue().toString();
-			String operator = param.getOperator();
-
-			if (field.isAnnotationPresent(ManyToOne.class)) {
-				Class<?> fieldType = field.getType();
-				String stringifyField = fieldType.getAnnotation(RamailoResource.class).stringify();
-
-				Join<Object, Object> join = root.join(field.getName(), JoinType.LEFT);
-				predicates.add(cb.equal(join.get(stringifyField), value));
-
-			} else {
-				Predicate predicate = null;
-				if (operator.equals("eq")) {
-					predicate = cb.equal(root.get(fieldName), value);
-				} else if (operator.equals("lt")) {
-					predicate = cb.lessThan(root.get(fieldName), value);
-				} else if (operator.equals("lte")) {
-					predicate = cb.lessThanOrEqualTo(root.get(fieldName), value);
-				} else if (operator.equals("gt")) {
-					predicate = cb.greaterThan(root.get(fieldName), value);
-				} else if (operator.equals("gte")) {
-					predicate = cb.greaterThanOrEqualTo(root.get(fieldName), value);
-				} else if (operator.equals("like")) {
-					predicate = cb.like(root.get(fieldName), value + "%");
-				}
+				Field field = request.getEntityClass().getDeclaredField(param.getKey());
+				Predicate predicate = buildPredicate(field, cb, root, param);
 
 				if (predicate != null)
 					predicates.add(predicate);
+			} catch (NoSuchFieldException | SecurityException e) {
+				continue;
 			}
-
 		}
 
 		cquery.where(predicates.toArray(new Predicate[0]));
