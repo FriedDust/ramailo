@@ -22,6 +22,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -45,6 +46,8 @@ import com.ramailo.util.TypeCaster;
  */
 @Stateless
 public class GenericServiceImpl {
+
+	static int PAGE_SIZE = 5;
 
 	@Inject
 	private EntityManager em;
@@ -104,13 +107,48 @@ public class GenericServiceImpl {
 
 		cquery.where(predicates.toArray(new Predicate[0]));
 
-		Field autoPkField = PkUtility.findAutoPkField(request.getEntityClass());
-		if (autoPkField != null) {
-			cquery.orderBy(cb.desc(root.get(autoPkField.getName())));
-		}
+		cquery.orderBy(order(request.getQueryParams(), cb, cquery, root).toArray(new Order[0]));
 
 		TypedQuery<?> tquery = em.createQuery(cquery);
+		paginate(request.getQueryParams(), tquery);
 		return tquery.getResultList();
+	}
+
+	private List<Order> order(List<QueryParam> params, CriteriaBuilder cb, CriteriaQuery cquery, Root root) {
+		List<Order> orders = new ArrayList<>();
+		for (QueryParam param : params) {
+			if (!param.getKey().equals("orderBy"))
+				continue;
+			if (param.getOperator().equals("desc")) {
+				orders.add(cb.desc(root.get(param.getValue().toString())));
+			} else {
+				orders.add(cb.asc(root.get(param.getValue().toString())));
+			}
+		}
+
+		return orders;
+	}
+
+	private void paginate(List<QueryParam> params, TypedQuery<?> tquery) {
+		Optional<QueryParam> startParam = params.stream().filter(qp -> qp.getKey().equals("start")).findFirst();
+		Optional<QueryParam> offsetParam = params.stream().filter(qp -> qp.getKey().equals("offset")).findFirst();
+
+		int start = 1;
+		int offset = PAGE_SIZE;
+
+		try {
+			start = startParam.isPresent() ? Integer.valueOf(startParam.get().getValue().toString()) : start;
+			start--;
+		} catch (NumberFormatException nfe) {
+		}
+
+		try {
+			offset = offsetParam.isPresent() ? Integer.valueOf(offsetParam.get().getValue().toString()) : offset;
+		} catch (NumberFormatException nfe) {
+		}
+
+		tquery.setFirstResult(start);
+		tquery.setMaxResults(offset);
 	}
 
 	public Object findById(RequestInfo request) {
