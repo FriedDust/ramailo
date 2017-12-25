@@ -1,6 +1,5 @@
 package com.ramailo.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -9,6 +8,7 @@ import javax.json.JsonObject;
 import com.ramailo.RequestInfo;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.meta.Action;
+import com.ramailo.pojo.DataWrapper;
 
 public class GenericMiddlewareImpl {
 
@@ -25,7 +25,7 @@ public class GenericMiddlewareImpl {
 		}
 
 		if (request.getPathParams().size() == 1) {
-			List<?> result = genericService.find(request);
+			DataWrapper result = genericService.find(request);
 
 			return result;
 		} else if (request.getPathParams().size() == 2) {
@@ -63,7 +63,7 @@ public class GenericMiddlewareImpl {
 
 			return result;
 		}
-		
+
 		throw new ResourceNotFoundException();
 	}
 
@@ -73,7 +73,7 @@ public class GenericMiddlewareImpl {
 			genericService.invokeAction(request, action.get(), null);
 			return;
 		}
-		
+
 		if (request.getPathParams().size() == 2) {
 			genericService.remove(request);
 			return;

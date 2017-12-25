@@ -34,6 +34,7 @@ import com.ramailo.annotation.RamailoArg;
 import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.meta.Action;
+import com.ramailo.pojo.DataWrapper;
 import com.ramailo.util.AttributeUtility;
 import com.ramailo.util.PkUtility;
 import com.ramailo.util.QueryParamUtility.QueryParam;
@@ -84,13 +85,28 @@ public class GenericServiceImpl {
 		}
 	}
 
-	public List<?> find(RequestInfo request) {
+	public DataWrapper find(RequestInfo request) {
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery cquery = cb.createQuery(request.getEntityClass());
 
 		Root<?> root = cquery.from(request.getEntityClass());
-		cquery.select(root);
+		applyFilters(request, cb, cquery, root);
 
+		cquery.select(cb.count(root));
+		TypedQuery<?> countQuery = em.createQuery(cquery);
+		Long count = (Long) countQuery.getSingleResult();
+
+		cquery.select(root);
+		cquery.orderBy(order(request.getQueryParams(), cb, cquery, root).toArray(new Order[0]));
+
+		TypedQuery<?> resultQuery = em.createQuery(cquery);
+		paginate(request.getQueryParams(), resultQuery);
+		List<?> result = resultQuery.getResultList();
+		
+		return new DataWrapper(result, count);
+	}
+
+	private void applyFilters(RequestInfo request, CriteriaBuilder cb, CriteriaQuery cquery, Root root) {
 		List<Predicate> predicates = new ArrayList<>();
 
 		for (QueryParam param : request.getQueryParams()) {
@@ -106,12 +122,6 @@ public class GenericServiceImpl {
 		}
 
 		cquery.where(predicates.toArray(new Predicate[0]));
-
-		cquery.orderBy(order(request.getQueryParams(), cb, cquery, root).toArray(new Order[0]));
-
-		TypedQuery<?> tquery = em.createQuery(cquery);
-		paginate(request.getQueryParams(), tquery);
-		return tquery.getResultList();
 	}
 
 	private List<Order> order(List<QueryParam> params, CriteriaBuilder cb, CriteriaQuery cquery, Root root) {
