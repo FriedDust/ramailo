@@ -17,7 +17,8 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
 
 	public Response toResponse(Exception exception) {
 		exception.printStackTrace();
-		ErrorMessage error = new ErrorMessage(exception.getMessage());
+		ErrorMessage error = new ErrorMessage(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+				exception.getMessage());
 		return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(error).type(MediaType.APPLICATION_JSON)
 				.build();
 	}
