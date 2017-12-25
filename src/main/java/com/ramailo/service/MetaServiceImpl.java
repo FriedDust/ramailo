@@ -80,7 +80,7 @@ public class MetaServiceImpl {
 	private List<Action> readActions() {
 		List<Action> actions = new ArrayList<>();
 
-		Class<? extends BaseActions<?>> actionClass[] = clazz.getAnnotation(RamailoResource.class).actions();
+		Class<? extends BaseAction<?>> actionClass[] = clazz.getAnnotation(RamailoResource.class).actions();
 		if (actionClass.length == 0)
 			return actions;
 
@@ -111,7 +111,7 @@ public class MetaServiceImpl {
 	private List<Action> readStaticActions() {
 		List<Action> actions = new ArrayList<>();
 
-		Class<? extends BaseActions<?>> actionClass[] = clazz.getAnnotation(RamailoResource.class).actions();
+		Class<? extends BaseAction<?>> actionClass[] = clazz.getAnnotation(RamailoResource.class).actions();
 		if (actionClass.length == 0)
 			return actions;
 

@@ -2,12 +2,12 @@ package com.ramailo.service;
 
 import javax.persistence.EntityManager;
 
-public abstract class BaseActions<T> {
+public abstract class BaseAction<T> {
 
 	protected final T entity;
 	protected EntityManager em;
 
-	public BaseActions(T entity) {
+	public BaseAction(T entity) {
 		this.entity = entity;
 	}
 

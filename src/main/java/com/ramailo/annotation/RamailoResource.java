@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.ramailo.service.BaseActions;
+import com.ramailo.service.BaseAction;
 
 /**
  * 
@@ -22,6 +22,6 @@ public @interface RamailoResource {
 
 	String[] gridHeaders() default {};
 
-	Class<? extends BaseActions<?>>[] actions() default {};
+	Class<? extends BaseAction<?>>[] actions() default {};
 
 }

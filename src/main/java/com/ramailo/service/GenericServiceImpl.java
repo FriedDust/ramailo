@@ -161,38 +161,44 @@ public class GenericServiceImpl {
 		return result;
 	}
 
-	private BaseActions<?> baseActions(Object entity) {
+	private Optional<BaseAction<?>> baseAction(Object entity) {
 		try {
-			Class actionClass = entity.getClass().getAnnotation(RamailoResource.class).actions()[0];
-			BaseActions<?> action = (BaseActions<?>) actionClass.getConstructor(entity.getClass()).newInstance(entity);
+			Class<?> actionClass = entity.getClass().getAnnotation(RamailoResource.class).actions()[0];
+			BaseAction<?> action = (BaseAction<?>) actionClass.getConstructor(entity.getClass()).newInstance(entity);
 
 			BeanUtils.setProperty(action, "em", em);
 
-			return action;
+			return Optional.of(action);
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException | SecurityException e) {
-			throw new RuntimeException("No base action class");
+			return Optional.empty();
+		} catch (ArrayIndexOutOfBoundsException e) {
+			return Optional.empty();
 		}
 	}
 
 	private void onBeforeSave(Object entity) {
-		BaseActions<?> action = baseActions(entity);
-		action.onBeforeSave();
+		Optional<BaseAction<?>> action = baseAction(entity);
+		if (action.isPresent())
+			action.get().onBeforeSave();
 	}
 
 	private void onSave(Object entity) {
-		BaseActions<?> action = baseActions(entity);
-		action.onSave();
+		Optional<BaseAction<?>> action = baseAction(entity);
+		if (action.isPresent())
+			action.get().onSave();
 	}
 
 	private void onBeforeDelete(Object entity) {
-		BaseActions<?> action = baseActions(entity);
-		action.onBeforeDelete();
+		Optional<BaseAction<?>> action = baseAction(entity);
+		if (action.isPresent())
+			action.get().onBeforeDelete();
 	}
 
 	private void onDelete(Object entity) {
-		BaseActions<?> action = baseActions(entity);
-		action.onDelete();
+		Optional<BaseAction<?>> action = baseAction(entity);
+		if (action.isPresent())
+			action.get().onDelete();
 	}
 
 	public Object create(RequestInfo resource, JsonObject object) {
@@ -267,7 +273,12 @@ public class GenericServiceImpl {
 	}
 
 	private Object invokeStaticAction(RequestInfo request, Action action, JsonObject data) {
-		Class actionImplClass = request.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
+		Class<?> actionImplClass = null;
+		try {
+			actionImplClass = request.getEntityClass().getAnnotation(RamailoResource.class).actions()[0];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throw new RuntimeException("Actions class not present.");
+		}
 		Optional<Method> method = Arrays.stream(actionImplClass.getMethods())
 				.filter(m -> m.getName().equals(action.getName())).findFirst();
 
@@ -286,8 +297,8 @@ public class GenericServiceImpl {
 		if (entity == null)
 			throw new ResourceNotFoundException();
 
-		BaseActions<?> actionImplObject = baseActions(entity);
-		Optional<Method> method = Arrays.stream(actionImplObject.getClass().getMethods())
+		Optional<BaseAction<?>> actionImplObject = baseAction(entity);
+		Optional<Method> method = Arrays.stream(actionImplObject.get().getClass().getMethods())
 				.filter(m -> m.getName().equals(action.getName())).findFirst();
 
 		Object arguments[] = new Object[0];
@@ -308,7 +319,7 @@ public class GenericServiceImpl {
 		}
 	}
 
-	private Object newInstanceWithId(Class clazz, String id) {
+	private Object newInstanceWithId(Class<?> clazz, String id) {
 		try {
 			Object obj = clazz.getConstructors()[0].newInstance();
 			BeanUtils.setProperty(obj, "id", id);
