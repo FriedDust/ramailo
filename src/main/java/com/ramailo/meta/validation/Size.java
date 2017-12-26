@@ -1,4 +1,4 @@
-package com.ramailo.meta;
+package com.ramailo.meta.validation;
 
 public class Size implements Validation {
 

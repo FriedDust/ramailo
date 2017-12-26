@@ -9,8 +9,8 @@ import javax.persistence.ManyToOne;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
-import com.ramailo.annotation.RamailoField;
-import com.ramailo.annotation.RamailoList;
+import com.ramailo.meta.annotation.RamailoField;
+import com.ramailo.meta.annotation.RamailoList;
 
 /**
  * 

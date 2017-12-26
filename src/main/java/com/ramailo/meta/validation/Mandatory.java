@@ -1,4 +1,4 @@
-package com.ramailo.meta;
+package com.ramailo.meta.validation;
 
 public class Mandatory implements Validation {
 

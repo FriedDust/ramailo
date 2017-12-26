@@ -5,9 +5,9 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.meta.Resource;
+import com.ramailo.meta.annotation.RamailoResource;
 import com.ramailo.util.ClassFinder;
 
 /**

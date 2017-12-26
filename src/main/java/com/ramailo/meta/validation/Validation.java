@@ -1,4 +1,4 @@
-package com.ramailo.meta;
+package com.ramailo.meta.validation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

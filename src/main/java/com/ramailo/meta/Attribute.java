@@ -3,6 +3,8 @@ package com.ramailo.meta;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ramailo.meta.validation.Validation;
+
 /**
  * 
  * @author Kailash Bijayananda <fried.dust@gmail.com>

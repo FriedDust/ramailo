@@ -14,20 +14,20 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 
-import com.ramailo.annotation.RamailoAction;
-import com.ramailo.annotation.RamailoArg;
-import com.ramailo.annotation.RamailoField;
-import com.ramailo.annotation.RamailoList;
-import com.ramailo.annotation.RamailoResource;
 import com.ramailo.meta.Action;
 import com.ramailo.meta.Argument;
 import com.ramailo.meta.Attribute;
 import com.ramailo.meta.AutoPkAttribute;
 import com.ramailo.meta.ListAttribute;
-import com.ramailo.meta.Mandatory;
 import com.ramailo.meta.Resource;
-import com.ramailo.meta.Size;
-import com.ramailo.meta.Validation;
+import com.ramailo.meta.annotation.RamailoAction;
+import com.ramailo.meta.annotation.RamailoArg;
+import com.ramailo.meta.annotation.RamailoField;
+import com.ramailo.meta.annotation.RamailoList;
+import com.ramailo.meta.annotation.RamailoResource;
+import com.ramailo.meta.validation.Mandatory;
+import com.ramailo.meta.validation.Size;
+import com.ramailo.meta.validation.Validation;
 import com.ramailo.util.StringUtility;
 
 /**

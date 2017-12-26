@@ -30,10 +30,10 @@ import org.apache.commons.beanutils.BeanUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramailo.RequestInfo;
-import com.ramailo.annotation.RamailoArg;
-import com.ramailo.annotation.RamailoResource;
 import com.ramailo.exception.ResourceNotFoundException;
 import com.ramailo.meta.Action;
+import com.ramailo.meta.annotation.RamailoArg;
+import com.ramailo.meta.annotation.RamailoResource;
 import com.ramailo.pojo.DataWrapper;
 import com.ramailo.util.AttributeUtility;
 import com.ramailo.util.PkUtility;

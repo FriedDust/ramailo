@@ -1,4 +1,4 @@
-package com.ramailo.annotation;
+package com.ramailo.meta.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
