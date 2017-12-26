@@ -339,7 +339,6 @@ public class GenericServiceImpl {
 				| SecurityException e) {
 			throw new RuntimeException("Cannot create instance of " + clazz.getName() + " and set ID");
 		}
-
 	}
 
 	private Object[] buildArgumentsForAction(Class<?> actionClass, Action action, List<QueryParam> queryParams) {

@@ -1,5 +1,8 @@
 package com.ramailo.meta;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 
  * @author Kailash Bijayananda <fried.dust@gmail.com>
@@ -10,6 +13,16 @@ public class Attribute {
 	private String name;
 	private String label;
 	private String type;
+
+	private List<Validation> validations = new ArrayList<>();
+
+	public List<Validation> getValidations() {
+		return validations;
+	}
+
+	public void setValidations(List<Validation> validations) {
+		this.validations = validations;
+	}
 
 	public String getType() {
 		return type;
