@@ -1,6 +1,8 @@
 package com.ramailo.auth;
 
+import com.ramailo.dto.auth.LoginDTO;
+
 public interface AuthService {
 
-	public Identity authenticate(String email, String password) throws AuthenticationException;
+	public Identity authenticate(LoginDTO loginDTO) throws AuthenticationException;
 }
