@@ -25,9 +25,7 @@ public class ResourceServiceImpl {
 
 		Set<Class<?>> classes = findAll();
 		for (Class<?> cls : classes) {
-			MetaServiceImpl metaService = new MetaServiceImpl(cls);
-			Resource resource = metaService.read();
-
+			Resource resource = new MetaBuilder(cls).read();
 			resources.add(resource);
 		}
 

@@ -8,7 +8,7 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriInfo;
 
 import com.ramailo.meta.Resource;
-import com.ramailo.service.MetaServiceImpl;
+import com.ramailo.service.MetaBuilder;
 import com.ramailo.service.ResourceServiceImpl;
 import com.ramailo.util.QueryParamUtility;
 
@@ -38,8 +38,7 @@ public class RequestParser {
 			Class<?> entityClass = resourceService.findResourceEntity(resourceName);
 			requestInfo.setEntityClass(entityClass);
 
-			MetaServiceImpl metaService = new MetaServiceImpl(entityClass);
-			Resource resource = metaService.read();
+			Resource resource = new MetaBuilder(entityClass).read();
 			requestInfo.setResource(resource);
 		}
 
