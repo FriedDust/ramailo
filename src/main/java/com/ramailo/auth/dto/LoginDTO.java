@@ -1,21 +1,16 @@
-package com.ramailo.dto.auth;
+package com.ramailo.auth.dto;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
-public class ResetPasswordDTO {
+public class LoginDTO {
 
-	@NotNull
+	@NotNull(message = "email cannot be null")
 	@Pattern(regexp = ".+@.+", message = "invalid email format")
 	private String email;
 
-	@NotNull
-	@Size(min = 6, max = 50)
+	@NotNull(message = "password cannot be null")
 	private String password;
-
-	@NotNull
-	private String code;
 
 	public String getEmail() {
 		return email;
@@ -31,13 +26,5 @@ public class ResetPasswordDTO {
 
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
 	}
 }

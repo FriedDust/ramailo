@@ -1,4 +1,4 @@
-package com.ramailo.dto.auth;
+package com.ramailo.auth.dto;
 
 import java.io.Serializable;
 

@@ -1,8 +1,9 @@
 package com.ramailo.auth;
 
-import com.ramailo.dto.auth.LoginDTO;
+import com.ramailo.auth.dto.LoginDTO;
+import com.ramailo.auth.dto.LoginResponseDTO;
 
 public interface AuthService {
 
-	public Identity authenticate(LoginDTO loginDTO) throws AuthenticationException;
+	public LoginResponseDTO authenticate(LoginDTO loginDTO) throws AuthenticationException;
 }

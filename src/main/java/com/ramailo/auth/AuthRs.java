@@ -10,7 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.ramailo.dto.auth.LoginDTO;
+import com.ramailo.auth.dto.LoginDTO;
 
 @Path("/auth")
 public class AuthRs {
