@@ -20,6 +20,7 @@ public class HashUtility {
 		try {
 			return BCrypt.checkpw(str1, str2);
 		} catch (IllegalArgumentException e) {
+			LOGGER.warn("Exception {}", e);
 			return false;
 		}
 	}
