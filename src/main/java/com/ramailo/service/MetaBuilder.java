@@ -5,11 +5,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
 
 import com.ramailo.annotation.RamailoAction;
 import com.ramailo.annotation.RamailoArg;
@@ -21,7 +24,10 @@ import com.ramailo.meta.Argument;
 import com.ramailo.meta.Attribute;
 import com.ramailo.meta.AutoPkAttribute;
 import com.ramailo.meta.ListAttribute;
+import com.ramailo.meta.Mandatory;
 import com.ramailo.meta.Resource;
+import com.ramailo.meta.Size;
+import com.ramailo.meta.Validation;
 import com.ramailo.util.StringUtility;
 
 /**
@@ -55,6 +61,26 @@ public class MetaBuilder {
 		resource.setGridHeaders(resourceAnnotation.gridHeaders());
 
 		return resource;
+	}
+
+	private Map<String, Validation> readValidations(Field field) {
+		Map<String, Validation> validations = new HashMap<>();
+
+		if (field.isAnnotationPresent(NotNull.class)) {
+			Mandatory m = new Mandatory(true);
+			validations.put(m.getValidationName(), m);
+		}
+
+		if (field.isAnnotationPresent(javax.validation.constraints.Size.class)) {
+			javax.validation.constraints.Size annotation = field.getAnnotation(javax.validation.constraints.Size.class);
+			Size size = new Size();
+			size.setMax(annotation.max());
+			size.setMin(annotation.min());
+			
+			validations.put(size.getValidationName(), size);
+		}
+
+		return validations;
 	}
 
 	private List<Argument> readArguments(Method method) {
@@ -101,7 +127,7 @@ public class MetaBuilder {
 				action.setLabel(label);
 				action.setArguments(readArguments(method));
 				action.setStaticMethod(false);
-				
+
 				actions.add(action);
 			}
 		}
@@ -132,7 +158,7 @@ public class MetaBuilder {
 				action.setLabel(label);
 				action.setArguments(readArguments(method));
 				action.setStaticMethod(true);
-				
+
 				actions.add(action);
 			}
 		}
@@ -160,6 +186,10 @@ public class MetaBuilder {
 				}
 
 			}
+
+			Map<String, Validation> validations = readValidations(field);
+			attribute.setValidations(validations);
+
 			attributes.add(attribute);
 		}
 

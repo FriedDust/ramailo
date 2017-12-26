@@ -20,4 +20,9 @@ public class Size implements Validation {
 	public void setMax(Integer max) {
 		this.max = max;
 	}
+	
+	@Override
+	public String getValidationName() {
+		return "size";
+	}
 }

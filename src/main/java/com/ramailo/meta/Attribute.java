@@ -1,7 +1,7 @@
 package com.ramailo.meta;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 
@@ -14,13 +14,13 @@ public class Attribute {
 	private String label;
 	private String type;
 
-	private List<Validation> validations = new ArrayList<>();
+	private Map<String, Validation> validations = new HashMap<>();
 
-	public List<Validation> getValidations() {
+	public Map<String, Validation> getValidations() {
 		return validations;
 	}
 
-	public void setValidations(List<Validation> validations) {
+	public void setValidations(Map<String, Validation> validations) {
 		this.validations = validations;
 	}
 

@@ -1,5 +1,9 @@
 package com.ramailo.meta;
 
-public interface Validation {
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
+public interface Validation {
+	
+	@JsonIgnore
+	public String getValidationName();
 }
