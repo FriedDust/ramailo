@@ -11,14 +11,14 @@ public class HashUtility {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(HashUtility.class);
 
-	public String hashPassword(String password) {
+	public String hash(String string) {
 
-		return BCrypt.hashpw(password, BCrypt.gensalt(12));
+		return BCrypt.hashpw(string, BCrypt.gensalt(12));
 	}
 
-	public Boolean checkPassword(String password, String hashedPassword) {
+	public Boolean match(String str1, String str2) {
 		try {
-			return BCrypt.checkpw(password, hashedPassword);
+			return BCrypt.checkpw(str1, str2);
 		} catch (IllegalArgumentException e) {
 			return false;
 		}
